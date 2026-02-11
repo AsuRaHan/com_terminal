@@ -1,0 +1,21 @@
+# Бинарные файлы и артефакты сборки
+build/
+*.exe
+*.dll
+*.obj
+*.pch
+*.pdb
+*.lib
+*.log
+*.tmp
+
+# Логи приложения
+logs/
+
+# Временные файлы IDE
+.vscode/
+.idea/
+!*.h
+!*.cpp
+!CMakeLists.txt
+TZ.md
