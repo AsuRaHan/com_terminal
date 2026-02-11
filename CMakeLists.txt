@@ -9,6 +9,9 @@ endif()
 add_executable(COMTerminal WIN32
     src/main.cpp
     src/ui/MainWindow.cpp
+    src/ui/WindowBuilder.cpp
+    src/ui/WindowLayout.cpp
+    src/ui/WindowActions.cpp
     src/core/SafeHandle.cpp
     src/core/BufferPool.cpp
     src/core/Crc.cpp

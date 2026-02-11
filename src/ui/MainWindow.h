@@ -4,6 +4,7 @@
 #include <dbt.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,10 @@
 #include "serial/SerialPort.h"
 
 namespace ui {
+
+class WindowBuilder;
+class WindowLayout;
+class WindowActions;
 
 enum class LogKind {
     Rx,
@@ -28,27 +33,21 @@ public:
     [[nodiscard]] HWND Handle() const noexcept;
 
 private:
+    friend class WindowBuilder;
+    friend class WindowLayout;
+    friend class WindowActions;
+
     static LRESULT CALLBACK WndProcSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK WndProcThunk(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     bool RegisterClass();
-    void CreateStatusBar();
-    void CreateControls();
-    void ResizeChildren();
-    void RefreshPorts();
-    bool OpenSelectedPort();
-    void ClosePort();
-    void SendInputData();
-    void FillConnectionDefaults();
 
     void AppendLog(LogKind kind, const std::wstring& text);
     void AppendLineToRichEdit(const std::wstring& line, COLORREF color, bool scrollToCaret);
     void RebuildRichEditFromVirtualBuffer();
     void UpdateStatusText();
     static COLORREF ColorForLogKind(LogKind kind) noexcept;
-    std::wstring FormatIncoming(const std::vector<uint8_t>& bytes) const;
-    serial::PortSettings BuildPortSettingsFromUi(bool* ok) const;
 
     static std::wstring BuildTimestamp();
     static std::wstring BytesToHex(const std::vector<uint8_t>& bytes);
@@ -84,6 +83,10 @@ private:
     bool rebuildingRichEdit_;
     std::uint64_t txBytes_;
     std::uint64_t rxBytes_;
+
+    std::unique_ptr<WindowBuilder> builder_;
+    std::unique_ptr<WindowLayout> layout_;
+    std::unique_ptr<WindowActions> actions_;
 };
 
 } // namespace ui
