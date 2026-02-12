@@ -1,4 +1,6 @@
 #include "ui/WindowLayout.h"
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
 
 namespace ui {
 

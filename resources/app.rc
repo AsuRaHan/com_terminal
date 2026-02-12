@@ -1,61 +1,88 @@
+#include <windows.h>
+#include <commctrl.h>
 #include <winres.h>
 #include "resource.h"
-
+// Иконки
 IDI_APP_ICON ICON "app.ico"
 IDB_TOOLBAR BITMAP "toolbar.bmp"
-ID_MANIFEST RT_MANIFEST "app.manifest"
 
+// Меню
 IDR_MAIN_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Open Port\tCtrl+O", IDM_PORT_OPEN
-        MENUITEM "Close Port", IDM_PORT_CLOSE
-        MENUITEM "Refresh Ports\tF5", IDM_PORT_REFRESH
+        MENUITEM "E&xit", IDM_FILE_EXIT
+    END
+    POPUP "&Port"
+    BEGIN
+        MENUITEM "&Open", IDM_PORT_OPEN
+        MENUITEM "&Close", IDM_PORT_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "Exit\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Refresh", IDM_PORT_REFRESH
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "Find\tCtrl+F", IDM_EDIT_FIND
+        MENUITEM "&Copy\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Select &All\tCtrl+A", IDM_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "Toggle Theme", IDM_VIEW_THEME
+        // MENUITEM "&Theme", 0, MENUBREAK
+        POPUP "Theme"
+        BEGIN
+            MENUITEM "&Light", IDM_VIEW_LIGHT_THEME, CHECKED
+            MENUITEM "&Dark", IDM_VIEW_DARK_THEME
+        END
     END
 END
 
+// Акселераторы (горячие клавиши)
 IDR_MAIN_ACCEL ACCELERATORS
 BEGIN
     "O", IDM_PORT_OPEN, VIRTKEY, CONTROL
-    "F", IDM_EDIT_FIND, VIRTKEY, CONTROL
-    VK_F5, IDM_PORT_REFRESH, VIRTKEY
+    "C", IDM_PORT_CLOSE, VIRTKEY, CONTROL
+    "R", IDM_PORT_REFRESH, VIRTKEY, CONTROL
+    "S", IDC_BTN_SEND, VIRTKEY, CONTROL
+    "L", IDC_BTN_CLEAR, VIRTKEY, CONTROL
+    "A", IDM_EDIT_SELECTALL, VIRTKEY, CONTROL
+    // VK_F1, IDM_HELP_ABOUT, VIRTKEY
 END
 
+// Манифест
+ID_MANIFEST RT_MANIFEST "app.manifest"
+
+// Версия
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,1,0,0
- PRODUCTVERSION 0,1,0,0
- FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
- FILEFLAGS 0
- FILEOS VOS__WINDOWS32
- FILETYPE VFT_APP
- FILESUBTYPE 0
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904B0"
+        BLOCK "041904B0"
         BEGIN
-            VALUE "CompanyName", "COMTerminal Team\0"
-            VALUE "FileDescription", "COM Terminal Win32 Application\0"
-            VALUE "FileVersion", "0.1.0.0\0"
-            VALUE "InternalName", "COMTerminal\0"
-            VALUE "OriginalFilename", "COMTerminal.exe\0"
-            VALUE "ProductName", "COMTerminal\0"
-            VALUE "ProductVersion", "0.1.0.0\0"
+            VALUE "CompanyName", "COM Terminal"
+            VALUE "FileDescription", "Professional COM Port Terminal"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "COMTerminal"
+            VALUE "LegalCopyright", ""
+            VALUE "OriginalFilename", "COMTerminal.exe"
+            VALUE "ProductName", "COM Terminal"
+            VALUE "ProductVersion", "1.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x0409, 1200
+        VALUE "Translation", 0x419, 1200
     END
 END

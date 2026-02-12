@@ -1,51 +1,6 @@
 #ifndef COMTERMINAL_RESOURCE_H
 #define COMTERMINAL_RESOURCE_H
 
-// #define IDS_APP_TITLE 101
-// #define IDI_APP_ICON 102
-// #define IDR_MAIN_MENU 103
-// #define IDR_MAIN_ACCEL 104
-// #define IDB_TOOLBAR 105
-// #define ID_MANIFEST 106
-
-// #define IDM_FILE_EXIT 40001
-// #define IDM_PORT_OPEN 40002
-// #define IDM_PORT_CLOSE 40003
-// #define IDM_EDIT_FIND 40004
-// #define IDM_VIEW_THEME 40005
-// #define IDM_PORT_REFRESH 40006
-
-// #define IDC_STATUS_BAR 50001
-// #define IDC_COMBO_PORT 50010
-// #define IDC_COMBO_BAUD 50011
-// #define IDC_BTN_REFRESH 50012
-// #define IDC_BTN_OPEN 50013
-// #define IDC_BTN_CLOSE 50014
-// #define IDC_RICH_LOG 50015
-// #define IDC_EDIT_SEND 50016
-// #define IDC_BTN_SEND 50017
-// #define IDC_LED_STATUS 50018
-// #define IDC_COMBO_DATABITS 50019
-// #define IDC_COMBO_PARITY 50020
-// #define IDC_COMBO_STOPBITS 50021
-// #define IDC_COMBO_FLOW 50022
-// #define IDC_CHK_RTS 50023
-// #define IDC_CHK_DTR 50024
-// #define IDC_COMBO_RXMODE 50025
-// #define IDC_CHK_SAVELOG 50026
-// #define IDC_BTN_CLEAR 50027
-
-// #define IDC_TX_TOTAL    50028
-// #define IDC_RX_TOTAL    50029
-// #define IDC_TX_RATE     50030
-// #define IDC_RX_RATE     50031
-
-// #define IDC_GROUP_PORT          50032
-// #define IDC_GROUP_STATS         50033
-// #define IDC_GROUP_TERMINAL_CTRL 50034
-// #define IDC_GROUP_LOG           50035
-// #define IDC_GROUP_SEND          50036
-
 #define IDS_APP_TITLE 101
 #define IDI_APP_ICON 102
 #define IDR_MAIN_MENU 103
@@ -67,6 +22,8 @@
 #define IDM_VIEW_TX 40011
 #define IDM_VIEW_SYSTEM 40012
 
+#define IDM_VIEW_DARK_THEME  40020
+#define IDM_VIEW_LIGHT_THEME 40021
 // Control IDs
 #define IDC_STATUS_BAR 50001
 #define IDC_COMBO_PORT 50010

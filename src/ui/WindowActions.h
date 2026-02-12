@@ -6,6 +6,9 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <sstream>      // Для stringstream
+#include <iomanip>      // Для манипуляторов
+#include <strsafe.h>    // Для StringCchPrintfW
 
 #include "resource.h"
 #include "serial/PortScanner.h"

@@ -96,6 +96,7 @@ void WindowActions::ClosePort() {
     }
 }
 
+
 void WindowActions::SendInputData() {
     if (!owner_.serialPort_.IsOpen()) {
         owner_.AppendLog(LogKind::Error, L"Port is not open");
@@ -111,28 +112,106 @@ void WindowActions::SendInputData() {
     text.resize(static_cast<std::size_t>(length));
     ::GetWindowTextW(owner_.editSend_, text.data(), length + 1);
 
-    const int utf8Len = ::WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, nullptr, 0, nullptr, nullptr);
-    if (utf8Len <= 1) {
-        return;
+    std::vector<uint8_t> bytes;
+    
+    const int mode = static_cast<int>(::SendMessage(owner_.comboRxMode_, CB_GETCURSEL, 0, 0));
+    
+    if (mode == 0) {
+        // Текстовый режим - UTF-8
+        int utf8Len = ::WideCharToMultiByte(
+            CP_UTF8, 0, text.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        
+        if (utf8Len > 1) {
+            bytes.resize(static_cast<std::size_t>(utf8Len - 1));
+            ::WideCharToMultiByte(
+                CP_UTF8, 0, text.c_str(), -1,
+                reinterpret_cast<LPSTR>(bytes.data()), utf8Len - 1, nullptr, nullptr);
+        }
+    } else {        
+        // ============ HEX режим - продвинутый парсинг ============
+        
+        // Разделяем строку по любым не-hex символам
+        std::wstring current;
+        for (wchar_t ch : text) {
+            if (iswxdigit(ch)) {
+                current += ch;
+            } else {
+                // Если накопили 2 символа - конвертируем
+                if (current.length() >= 2) {
+                    // Берем по 2 символа
+                    for (size_t i = 0; i < current.length() / 2; i++) {
+                        std::wstring byteStr = current.substr(i * 2, 2);
+                        wchar_t* end;
+                        long val = std::wcstol(byteStr.c_str(), &end, 16);
+                        bytes.push_back(static_cast<uint8_t>(val));
+                    }
+                    // Если остался 1 символ - добавим 0 спереди
+                    if (current.length() % 2 == 1) {
+                        std::wstring byteStr = L"0" + current.substr(current.length() - 1);
+                        wchar_t* end;
+                        long val = std::wcstol(byteStr.c_str(), &end, 16);
+                        bytes.push_back(static_cast<uint8_t>(val));
+                    }
+                }
+                current.clear();
+            }
+        }
+        
+        // Обрабатываем остаток строки
+        if (!current.empty()) {
+            if (current.length() >= 2) {
+                for (size_t i = 0; i < current.length() / 2; i++) {
+                    std::wstring byteStr = current.substr(i * 2, 2);
+                    wchar_t* end;
+                    long val = std::wcstol(byteStr.c_str(), &end, 16);
+                    bytes.push_back(static_cast<uint8_t>(val));
+                }
+                if (current.length() % 2 == 1) {
+                    std::wstring byteStr = L"0" + current.substr(current.length() - 1);
+                    wchar_t* end;
+                    long val = std::wcstol(byteStr.c_str(), &end, 16);
+                    bytes.push_back(static_cast<uint8_t>(val));
+                }
+            } else {
+                // Один символ в конце
+                std::wstring byteStr = L"0" + current;
+                wchar_t* end;
+                long val = std::wcstol(byteStr.c_str(), &end, 16);
+                bytes.push_back(static_cast<uint8_t>(val));
+            }
+        }
     }
 
-    std::vector<uint8_t> bytes(static_cast<std::size_t>(utf8Len - 1));
-    ::WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, reinterpret_cast<LPSTR>(bytes.data()), utf8Len - 1, nullptr, nullptr);
+    if (bytes.empty()) {
+        owner_.AppendLog(LogKind::Error, L"No data to send");
+        return;
+    }
 
     DWORD written = 0;
     if (owner_.serialPort_.Write(bytes.data(), static_cast<DWORD>(bytes.size()), &written)) {
         owner_.txBytes_ += written;
         owner_.UpdateStatusText();
-        owner_.AppendLog(LogKind::Tx, L"TX " + MainWindow::BytesToHex(bytes));
+        
+        if (mode == 0) {
+            std::wstring displayText = text;
+            if (displayText.length() > 100) {
+                displayText = displayText.substr(0, 100) + L"...";
+            }
+            owner_.AppendLog(LogKind::Tx, L"TX: " + displayText);
+        } else {
+            owner_.AppendLog(LogKind::Tx, L"TX: " + MainWindow::BytesToHex(bytes));
+        }
     } else {
         owner_.AppendLog(LogKind::Error, L"Write failed");
     }
 }
 
+
+
 void WindowActions::HandleSerialData(const std::vector<uint8_t>& bytes) {
     owner_.rxBytes_ += static_cast<std::uint64_t>(bytes.size());
     owner_.UpdateStatusText();
-    owner_.AppendLog(LogKind::Rx, L"RX " + FormatIncoming(bytes));
+    owner_.AppendLog(LogKind::Rx, L"RX: " + FormatIncoming(bytes));
 }
 
 std::wstring WindowActions::ComboText(HWND combo) {
@@ -191,17 +270,19 @@ serial::PortSettings WindowActions::BuildPortSettingsFromUi(bool* ok) const {
 
 std::wstring WindowActions::FormatIncoming(const std::vector<uint8_t>& bytes) const {
     const int mode = static_cast<int>(::SendMessage(owner_.comboRxMode_, CB_GETCURSEL, 0, 0));
+    
     if (mode == 0) {
-        if (bytes.empty()) {
-            return L"";
-        }
-        const int utf16Len = ::MultiByteToWideChar(
+        if (bytes.empty()) return L"";
+        
+        // Сначала пробуем UTF-8
+        int utf16Len = ::MultiByteToWideChar(
             CP_UTF8,
             MB_ERR_INVALID_CHARS,
             reinterpret_cast<const char*>(bytes.data()),
             static_cast<int>(bytes.size()),
             nullptr,
             0);
+        
         if (utf16Len > 0) {
             std::wstring text(static_cast<std::size_t>(utf16Len), L'\0');
             ::MultiByteToWideChar(
@@ -211,16 +292,37 @@ std::wstring WindowActions::FormatIncoming(const std::vector<uint8_t>& bytes) co
                 static_cast<int>(bytes.size()),
                 text.data(),
                 utf16Len);
-            return text;
+            
+            // Обработка управляющих символов
+            std::wstring result;
+            result.reserve(text.length());
+            for (wchar_t ch : text) {
+                if (ch == L'\r') {
+                    continue;
+                } else if (ch == L'\n') {
+                    result += L'\n';
+                } else if (ch == L'\t') {
+                    result += L"    ";
+                } else if (ch < 32) {
+                    wchar_t buf[8] = {};
+                    ::StringCchPrintfW(buf, 8, L"^%c", ch + 64);
+                    result += buf;
+                } else {
+                    result += ch;
+                }
+            }
+            return result;
         }
-
-        const int acpLen = ::MultiByteToWideChar(
+        
+        // Пробуем системную кодовую страницу
+        int acpLen = ::MultiByteToWideChar(
             CP_ACP,
             0,
             reinterpret_cast<const char*>(bytes.data()),
             static_cast<int>(bytes.size()),
             nullptr,
             0);
+            
         if (acpLen > 0) {
             std::wstring text(static_cast<std::size_t>(acpLen), L'\0');
             ::MultiByteToWideChar(
@@ -230,11 +332,34 @@ std::wstring WindowActions::FormatIncoming(const std::vector<uint8_t>& bytes) co
                 static_cast<int>(bytes.size()),
                 text.data(),
                 acpLen);
-            return text;
+            
+            std::wstring result;
+            result.reserve(text.length());
+            for (wchar_t ch : text) {
+                if (ch == L'\r') {
+                    continue;
+                } else if (ch == L'\n') {
+                    result += L'\n';
+                } else if (ch == L'\t') {
+                    result += L"    ";
+                } else if (ch < 32) {
+                    wchar_t buf[8] = {};
+                    ::StringCchPrintfW(buf, 8, L"^%c", ch + 64);
+                    result += buf;
+                } else {
+                    result += ch;
+                }
+            }
+            return result;
         }
+        
+        // Если ничего не работает - HEX
+        return L"[BIN] " + MainWindow::BytesToHex(bytes);
     }
-
+    
+    // HEX режим
     return MainWindow::BytesToHex(bytes);
 }
+
 
 } // namespace ui
