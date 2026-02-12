@@ -36,8 +36,11 @@ void WindowLayout::ResizeChildren() const {
     ::MoveWindow(owner_.comboPort_, left, y, 250, comboDropHeight, TRUE);
     ::MoveWindow(owner_.comboBaud_, left + 260, y, 120, comboDropHeight, TRUE);
     ::MoveWindow(owner_.buttonRefresh_, left + 390, y, 90, rowHeight, TRUE);
-    ::MoveWindow(owner_.buttonOpen_, left + 490, y, 80, rowHeight, TRUE);
-    ::MoveWindow(owner_.buttonClose_, left + 580, y, 80, rowHeight, TRUE);
+    // Place both Open and Close buttons at the same coordinates so they overlap.
+    // The visibility of each button will be toggled based on connection status.
+    const int connectButtonX = left + 490; // shared X position
+    ::MoveWindow(owner_.buttonOpen_, connectButtonX, y, 80, rowHeight, TRUE);
+    ::MoveWindow(owner_.buttonClose_, connectButtonX, y, 80, rowHeight, TRUE);
     ::MoveWindow(owner_.ledStatus_, right - 160, y, 152, rowHeight, TRUE);
 
     y += rowHeight + gap;

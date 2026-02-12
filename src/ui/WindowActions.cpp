@@ -89,6 +89,8 @@ bool WindowActions::OpenSelectedPort() {
     ::SetWindowTextW(owner_.ledStatus_, L"Connected");
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Connected"));
     owner_.AppendLog(LogKind::System, L"Opened " + portName + L" @ " + std::to_wstring(settings.baudRate));
+    // Update button visibility after successful connection
+    owner_.UpdateConnectionButtons();
     return true;
 }
 
@@ -99,6 +101,8 @@ void WindowActions::ClosePort() {
         ::SetWindowTextW(owner_.ledStatus_, L"Disconnected");
         ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
         owner_.AppendLog(LogKind::System, L"Port closed");
+        // Update button visibility after closing
+        owner_.UpdateConnectionButtons();
     }
 }
 

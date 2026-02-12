@@ -87,6 +87,8 @@ private:
     std::unique_ptr<WindowBuilder> builder_;
     std::unique_ptr<WindowLayout> layout_;
     std::unique_ptr<WindowActions> actions_;
+    // Toggles visibility of the Open/Close buttons depending on connection status.
+    void UpdateConnectionButtons();
 };
 
 } // namespace ui

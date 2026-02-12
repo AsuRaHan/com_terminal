@@ -220,6 +220,16 @@ void MainWindow::UpdateStatusText() {
     ::SendMessage(statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(buffer));
 }
 
+// Update visibility of Open/Close buttons based on connection status.
+void MainWindow::UpdateConnectionButtons() {
+    if (buttonOpen_ == nullptr || buttonClose_ == nullptr) return;
+    BOOL isConnected = serialPort_.IsOpen();
+    // Show 'Open' when disconnected, hide otherwise
+    ::ShowWindow(buttonOpen_, isConnected ? SW_HIDE : SW_SHOW);
+    // Show 'Close' when connected, hide otherwise
+    ::ShowWindow(buttonClose_, isConnected ? SW_SHOW : SW_HIDE);
+}
+
 std::wstring MainWindow::BuildTimestamp() {
     SYSTEMTIME st{};
     ::GetLocalTime(&st);
@@ -302,6 +312,8 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         deviceNotify_ = ::RegisterDeviceNotificationW(hwnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
         layout_->ResizeChildren();
+        // Show the appropriate button based on initial connection state
+        UpdateConnectionButtons();
         actions_->RefreshPorts();
         AppendLog(LogKind::System, L"Application started");
         return 0;
