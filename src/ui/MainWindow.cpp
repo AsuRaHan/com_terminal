@@ -46,8 +46,9 @@ MainWindow::MainWindow(HINSTANCE instance)
       buttonOpen_(nullptr),
       buttonClose_(nullptr),
       richLog_(nullptr),
-      editSend_(nullptr),
-      buttonSend_(nullptr),
+    editSend_(nullptr),
+    buttonSend_(nullptr),
+    buttonClear_(nullptr),
       ledStatus_(nullptr),
       comboDataBits_(nullptr),
       comboParity_(nullptr),
@@ -230,6 +231,21 @@ void MainWindow::UpdateConnectionButtons() {
     ::ShowWindow(buttonClose_, isConnected ? SW_SHOW : SW_HIDE);
 }
 
+// Очистка содержимого терминала и сброс счётчиков
+void MainWindow::ClearTerminal() {
+    if (richLog_ == nullptr) {
+        return;
+    }
+    // Убираем весь текст из RichEdit
+    ::SendMessage(richLog_, EM_SETSEL, 0, -1);
+    ::SendMessage(richLog_, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(L"") );
+
+    // Сбрасываем счётчики байтов
+    txBytes_ = 0;
+    rxBytes_ = 0;
+    UpdateStatusText();
+}
+
 std::wstring MainWindow::BuildTimestamp() {
     SYSTEMTIME st{};
     ::GetLocalTime(&st);
@@ -346,6 +362,10 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         case IDC_BTN_SEND:
             actions_->SendInputData();
+            return 0;
+        case IDC_BTN_CLEAR:
+            // Call the member function directly; 'owner_' is not a valid identifier here.
+            ClearTerminal();
             return 0;
         default:
             break;

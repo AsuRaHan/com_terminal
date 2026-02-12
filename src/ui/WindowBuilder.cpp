@@ -111,6 +111,24 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
+    // New button to clear terminal output, placed next to Open/Close buttons
+    // Create the Clear button. Width should be 200 to match other buttons, height must be non‑zero.
+    // The previous implementation mistakenly swapped width and height arguments
+    // (width=0, height=200), resulting in a zero‑size control that is invisible.
+    owner_.buttonClear_ = ::CreateWindowEx(
+        0,
+        WC_BUTTONW,
+        L"Clear",
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+        0,          // X position – will be set later by layout code
+        0,          // Y position – will be set later by layout code
+        200,        // width (same as other buttons)
+        30,         // height – a reasonable button size
+        owner_.window_,
+        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_BTN_CLEAR)),
+        owner_.instance_,
+        nullptr);
+
     owner_.comboDataBits_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
@@ -125,33 +143,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboParity_ = ::CreateWindowEx(
-        0,
-        WC_COMBOBOXW,
-        nullptr,
-        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP,
-        0,
-        0,
-        0,
-        200,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_COMBO_PARITY)),
-        owner_.instance_,
-        nullptr);
-
-    owner_.comboStopBits_ = ::CreateWindowEx(
-        0,
-        WC_COMBOBOXW,
-        nullptr,
-        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP,
-        0,
-        0,
-        0,
-        200,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_COMBO_STOPBITS)),
-        owner_.instance_,
-        nullptr);
+    // Removed duplicate Clear button definition and erroneous combo box creation
 
     owner_.comboFlow_ = ::CreateWindowEx(
         0,

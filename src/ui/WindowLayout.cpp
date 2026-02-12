@@ -41,6 +41,9 @@ void WindowLayout::ResizeChildren() const {
     const int connectButtonX = left + 490; // shared X position
     ::MoveWindow(owner_.buttonOpen_, connectButtonX, y, 80, rowHeight, TRUE);
     ::MoveWindow(owner_.buttonClose_, connectButtonX, y, 80, rowHeight, TRUE);
+    // Place Clear button next to the Open/Close buttons on the first row.
+    // It uses the same height and is positioned immediately after Close.
+    ::MoveWindow(owner_.buttonClear_, connectButtonX + 80, y, 80, rowHeight, TRUE);
     ::MoveWindow(owner_.ledStatus_, right - 160, y, 152, rowHeight, TRUE);
 
     y += rowHeight + gap;
@@ -69,8 +72,8 @@ void WindowLayout::ApplyMinTrackSize(MINMAXINFO* minMaxInfo) {
     if (minMaxInfo == nullptr) {
         return;
     }
-    minMaxInfo->ptMinTrackSize.x = 800;
-    minMaxInfo->ptMinTrackSize.y = 600;
+    minMaxInfo->ptMinTrackSize.x = 900;
+    minMaxInfo->ptMinTrackSize.y = 700;
 }
 
 } // namespace ui

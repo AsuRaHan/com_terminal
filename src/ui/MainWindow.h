@@ -63,6 +63,7 @@ private:
     HWND richLog_;
     HWND editSend_;
     HWND buttonSend_;
+    HWND buttonClear_; // New button to clear terminal output
     HWND ledStatus_;
     HWND comboDataBits_;
     HWND comboParity_;
@@ -89,6 +90,7 @@ private:
     std::unique_ptr<WindowActions> actions_;
     // Toggles visibility of the Open/Close buttons depending on connection status.
     void UpdateConnectionButtons();
+    void ClearTerminal(); // Clears the rich edit log and resets counters
 };
 
 } // namespace ui
