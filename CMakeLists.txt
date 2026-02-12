@@ -63,10 +63,10 @@ endif()
 target_link_libraries(COMTerminal PRIVATE
     setupapi      # Для COM-портов
     comctl32      # Общие контролы
-    comctl32.lib  # Версия с визуальными стилями
-    dwmapi        # DWM для современного вида
-    UxTheme       # Темы оформления
-    Shlwapi       # Работа с путями
+    # comctl32.lib  # Версия с визуальными стилями
+    # dwmapi        # DWM для современного вида
+    # UxTheme       # Темы оформления
+    # Shlwapi       # Работа с путями
 )
 
 # Указываем версию Common Controls

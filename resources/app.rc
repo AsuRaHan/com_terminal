@@ -27,15 +27,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
     END
-    POPUP "&View"
-    BEGIN
-        // MENUITEM "&Theme", 0, MENUBREAK
-        POPUP "Theme"
-        BEGIN
-            MENUITEM "&Light", IDM_VIEW_LIGHT_THEME, CHECKED
-            MENUITEM "&Dark", IDM_VIEW_DARK_THEME
-        END
-    END
+    // POPUP "&View"
+    // BEGIN
+    //     POPUP "Theme"
+    //     BEGIN
+    //         MENUITEM "&Light", IDM_VIEW_LIGHT_THEME, CHECKED
+    //         MENUITEM "&Dark", IDM_VIEW_DARK_THEME
+    //     END
+    // END
 END
 
 // Акселераторы (горячие клавиши)

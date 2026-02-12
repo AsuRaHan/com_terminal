@@ -13,7 +13,7 @@
 
 #include <versionhelpers.h>  // Для IsWindows10OrGreater()
 #include <dwmapi.h>          // Для DwmSetWindowAttribute()
-#pragma comment(lib, "dwmapi.lib")
+// #pragma comment(lib, "dwmapi.lib")
 
 namespace ui {
 
@@ -117,9 +117,13 @@ private:
     HBRUSH bgBrush_;        // Кисть фона
     HBRUSH editBrush_;      // Кисть для EDIT
     HBRUSH comboBrush_;     // Кисть для COMBOBOX
-    
+    HBRUSH groupBrush_;     // Кисть для групп
+    HBRUSH staticBrush_;    // Кисть для статиков
+
+    // Добавь методы:
     void CreateThemeBrushes(bool darkMode); 
     void DestroyThemeBrushes();
+    void ApplyThemesToAllControls();
     // Toggles visibility of the Open/Close buttons depending on connection status.
     void UpdateConnectionButtons();
     void ClearTerminal(); // Clears the rich edit log and resets counters

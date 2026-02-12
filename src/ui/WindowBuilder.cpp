@@ -1,7 +1,7 @@
 #include "ui/WindowBuilder.h"
 
 #include <uxtheme.h>
-#pragma comment(lib, "uxtheme.lib")
+// #pragma comment(lib, "uxtheme.lib")
 
 namespace ui {
 
@@ -24,8 +24,8 @@ void WindowBuilder::CreateStatusBar() {
         return;
     }
 
-    int parts[4] = {260, 520, 780, -1};
-    ::SendMessage(owner_.statusBar_, SB_SETPARTS, 4, reinterpret_cast<LPARAM>(parts));
+    int parts[3] = {260, 520, -1}; // Три части: статус, статистика, подсказки
+    ::SendMessage(owner_.statusBar_, SB_SETPARTS, 3, reinterpret_cast<LPARAM>(parts));
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(L"TX: 0  RX: 0"));
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(L"Ready"));
@@ -516,7 +516,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    ApplyThemes();
+    // ApplyThemes();
     // ============ Установка шрифта для лога ============
     CHARFORMAT2W format{};
     format.cbSize = sizeof(format);

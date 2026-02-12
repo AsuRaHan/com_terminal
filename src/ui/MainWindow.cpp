@@ -81,25 +81,20 @@ MainWindow::MainWindow(HINSTANCE instance):
         icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS;
         ::InitCommonControlsEx(&icc);
         // ЯВНО активируем визуальные стили
-        ::SetWindowTheme(::GetDesktopWindow(), L" ", L" "); // Хак для активации визуальных стилей для всех контролов в приложении
+        // ::SetWindowTheme(::GetDesktopWindow(), L" ", L" "); // Хак для активации визуальных стилей для всех контролов в приложении
 
-        LoadThemeSetting(); // Загружаем сохраненную тему при запуске
+        // LoadThemeSetting(); // Загружаем сохраненную тему при запуске
 }
 
 MainWindow::~MainWindow() {
     actions_->ClosePort();
-    if (deviceNotify_ != nullptr) {
-        ::UnregisterDeviceNotification(deviceNotify_);
-        deviceNotify_ = nullptr;
-    }
-    if (ledBrushDisconnected_ != nullptr) {
-        ::DeleteObject(ledBrushDisconnected_);
-        ledBrushDisconnected_ = nullptr;
-    }
-    if (ledBrushConnected_ != nullptr) {
-        ::DeleteObject(ledBrushConnected_);
-        ledBrushConnected_ = nullptr;
-    }
+    if (deviceNotify_) ::UnregisterDeviceNotification(deviceNotify_);
+    
+    // Удаляем кисти
+    // DestroyThemeBrushes();
+    
+    // if (ledBrushConnected_) { ::DeleteObject(ledBrushConnected_); ledBrushConnected_ = nullptr; }
+    // if (ledBrushDisconnected_) { ::DeleteObject(ledBrushDisconnected_); ledBrushDisconnected_ = nullptr; }
 }
 
 bool MainWindow::Create(int nCmdShow) {
@@ -108,7 +103,7 @@ bool MainWindow::Create(int nCmdShow) {
     }
 
     constexpr int kWidth = 900;
-    constexpr int kHeight = 600;
+    constexpr int kHeight = 700;
     RECT rect = CenteredRect(kWidth, kHeight);
 
     window_ = ::CreateWindowEx(
@@ -345,188 +340,135 @@ void MainWindow::SaveLogToFile() {
 }
 
 
-void MainWindow::ApplyTheme(bool darkMode) {
-    isDarkTheme_ = darkMode;
+// void MainWindow::ApplyTheme(bool darkMode) {
+//     isDarkTheme_ = darkMode;
     
-    // 1. Системная тема заголовка
-    if (::IsWindows10OrGreater()) {
-        BOOL useDarkMode = darkMode ? TRUE : FALSE;
-        ::DwmSetWindowAttribute(
-            window_,
-            DWMWA_USE_IMMERSIVE_DARK_MODE,
-            &useDarkMode,
-            sizeof(useDarkMode)
-        );
-    }
+//     // 1. Создаем кисти
+//     CreateThemeBrushes(darkMode);
     
-    // 2. Кисти для LED
-    if (ledBrushConnected_) {
-        ::DeleteObject(ledBrushConnected_);
-        ledBrushConnected_ = nullptr;
-    }
-    if (ledBrushDisconnected_) {
-        ::DeleteObject(ledBrushDisconnected_);
-        ledBrushDisconnected_ = nullptr;
-    }
+//     // 2. Темный заголовок
+//     if (::IsWindows10OrGreater()) {
+//         BOOL useDarkMode = darkMode ? TRUE : FALSE;
+//         ::DwmSetWindowAttribute(window_, DWMWA_USE_IMMERSIVE_DARK_MODE,
+//             &useDarkMode, sizeof(useDarkMode));
+//     }
     
-    if (darkMode) {
-        ledBrushConnected_ = ::CreateSolidBrush(RGB(40, 140, 60));
-        ledBrushDisconnected_ = ::CreateSolidBrush(RGB(180, 40, 40));
-    } else {
-        ledBrushConnected_ = ::CreateSolidBrush(RGB(50, 160, 70));
-        ledBrushDisconnected_ = ::CreateSolidBrush(RGB(200, 50, 50));
-    }
+//     // 3. Фон окна
+//     ::SetClassLongPtr(window_, GCLP_HBRBACKGROUND, reinterpret_cast<LONG_PTR>(bgBrush_));
+
+//     // 4. Применяем визуальные стили ко ВСЕМ контролам
+//     ApplyThemesToAllControls();
     
-    // 3. Текст LED
-    if (ledStatus_) {
-        ::SetWindowTextW(ledStatus_, 
-            serialPort_.IsOpen() ? L"Connected" : L"Disconnected");
-        ::InvalidateRect(ledStatus_, nullptr, TRUE);
-    }
-    
-    // 4. Фон главного окна - ИСПРАВЛЕНО
-    HBRUSH newBgBrush = ::CreateSolidBrush(darkMode ? RGB(32, 32, 32) : RGB(240, 240, 240));
-    HBRUSH oldBgBrush = reinterpret_cast<HBRUSH>(::SetClassLongPtrW(window_, 
-        GCLP_HBRBACKGROUND, reinterpret_cast<LONG_PTR>(newBgBrush)));
-    if (oldBgBrush) {
-        ::DeleteObject(oldBgBrush);  // Удаляем ТОЛЬКО старую кисть
-    }
-    // newBgBrush НЕ УДАЛЯЕМ - она теперь живет в классе окна
-    
-    // 5. Перерисовка всех контролов
-    ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
-        MainWindow* self = reinterpret_cast<MainWindow*>(lParam);
+//     // 5. Спец обработка RichEdit
+//     if (richLog_) {
+//         // Жесткий сброс темы
+//         ::SetWindowTheme(richLog_, L"", L"");
+//         ::SetWindowTheme(richLog_, L"Explorer", nullptr);
         
-        // Базовая перерисовка
-        ::InvalidateRect(hwnd, nullptr, TRUE);
-        
-        // Спецобработка для групп
-        wchar_t className[64];
-        ::GetClassNameW(hwnd, className, 64);
-        
-        if (wcscmp(className, WC_BUTTONW) == 0) {
-            LONG style = ::GetWindowLongW(hwnd, GWL_STYLE);
-            if (style & BS_GROUPBOX) {
-                ::RedrawWindow(hwnd, nullptr, nullptr, 
-                    RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
-            }
-        }
-        
-        // Спецобработка для RichEdit
-        if (hwnd == self->richLog_) {
-            // Принудительно перерисовываем с новыми цветами
-            ::RedrawWindow(hwnd, nullptr, nullptr, 
-                RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
+//         CHARFORMAT2W cf = {sizeof(cf)};
+//         cf.dwMask = CFM_COLOR | CFM_BACKCOLOR;
+//         cf.crTextColor = darkMode ? RGB(240,240,240) : RGB(0,0,0);
+//         cf.crBackColor = darkMode ? RGB(32,32,32) : RGB(255,255,255);
+//         ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+//     }
+    
+//     // 6. Обновляем LED
+//     if (ledStatus_) {
+//         ::SetWindowTextW(ledStatus_, serialPort_.IsOpen() ? L"Connected" : L"Disconnected");
+//         ::InvalidateRect(ledStatus_, NULL, TRUE);
+//     }
+    
+//     // 7. Перерисовываем ВСЁ
+//     ::RedrawWindow(window_, NULL, NULL, 
+//         RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+    
+//     // 8. Меню
+//     UpdateThemeMenu();
+//     SaveThemeSetting(darkMode);
+// }
+
+
+// void MainWindow::ApplyThemesToAllControls() {
+//     HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
+//     if (!hUxTheme) return;
+    
+//     typedef HRESULT(WINAPI* SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
+//     auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
+    
+//     if (pSetWindowTheme) {
+//         ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
+//             auto pSetWindowTheme = (SetWindowThemeFn)lParam;
             
-            // Переустанавливаем форматирование для всего текста
-            CHARFORMAT2W format{};
-            format.cbSize = sizeof(format);
-            format.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
-            format.crTextColor = self->isDarkTheme_ ? RGB(240, 240, 240) : RGB(0, 0, 0);
-            format.yHeight = 180;
-            ::StringCchCopyW(format.szFaceName, LF_FACESIZE, L"Consolas");
+//             // Сначала сбрасываем
+//             pSetWindowTheme(hwnd, L"", L"");
             
-            ::SendMessage(self->richLog_, EM_SETCHARFORMAT, SCF_ALL, 
-                reinterpret_cast<LPARAM>(&format));
-        }
-        
-        return TRUE;
-    }, reinterpret_cast<LPARAM>(this));
-
-    
-        // ============ ВАЖНО: Применяем визуальные стили ко всем контролам ============
-    HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
-    if (hUxTheme) {
-        typedef HRESULT (WINAPI *SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
-        auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
-        
-        if (pSetWindowTheme) {
-            // Перебираем все дочерние окна
-            ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
-                auto pSetWindowTheme = reinterpret_cast<SetWindowThemeFn>(lParam);
-                
-                // Для ВСЕХ контролов применяем Explorer тему
-                pSetWindowTheme(hwnd, L"Explorer", nullptr);
-                
-                // Для RichEdit особая тема
-                wchar_t className[64];
-                ::GetClassNameW(hwnd, className, 64);
-                if (wcscmp(className, L"RichEdit20W") == 0 || 
-                    wcscmp(className, MSFTEDIT_CLASS) == 0) {
-                    pSetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
-                }
-                
-                return TRUE;
-            }, reinterpret_cast<LPARAM>(pSetWindowTheme));
-        }
-        
-        ::FreeLibrary(hUxTheme);
-    }
-    
-    // ============ Теперь фон для контролов в темной теме ============
-    if (darkMode) {
-        // Перекрашиваем фон всех статиков и групп
-        ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
-            wchar_t className[64];
-            ::GetClassNameW(hwnd, className, 64);
+//             // Применяем Explorer
+//             pSetWindowTheme(hwnd, L"Explorer", nullptr);
             
-            if (wcscmp(className, WC_STATICW) == 0 ||
-                wcscmp(className, WC_BUTTONW) == 0) {
-                // Для статиков и групп - темный фон
-                ::InvalidateRect(hwnd, nullptr, TRUE);
-            }
+//             // Для RichEdit особая тема
+//             wchar_t className[64];
+//             ::GetClassNameW(hwnd, className, 64);
+//             if (wcscmp(className, L"RichEdit20W") == 0 || 
+//                 wcscmp(className, MSFTEDIT_CLASS) == 0) {
+//                 pSetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
+//             }
             
-            return TRUE;
-        }, 0);
-    }
-
-    // ReapplyLogColors();  // Перекрашиваем весь существующий лог с учетом новой темы
-
-    // 6. Полная перерисовка окна
-    ::RedrawWindow(window_, nullptr, nullptr, 
-        RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+//             return TRUE;
+//         }, reinterpret_cast<LPARAM>(pSetWindowTheme));
+//     }
     
-    // 7. Меню и сохранение
-    UpdateThemeMenu();
-    SaveThemeSetting(darkMode);
-}
+//     ::FreeLibrary(hUxTheme);
+// }
 
 
-void MainWindow::ReapplyLogColors() {
-    if (!richLog_) return;
+
+
+// void MainWindow::ReapplyLogColors() {
+//     if (!richLog_) return;
     
-    // Сохраняем позицию
-    POINT scrollPos{};
-    ::SendMessage(richLog_, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
+//     // Сохраняем позицию
+//     POINT scrollPos{};
+//     ::SendMessage(richLog_, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
     
-    CHARRANGE selection{};
-    ::SendMessage(richLog_, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+//     CHARRANGE selection{};
+//     ::SendMessage(richLog_, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
     
-    // Переустанавливаем форматирование для всего текста
-    CHARFORMAT2W format{};
-    format.cbSize = sizeof(format);
-    format.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
-    format.crTextColor = isDarkTheme_ ? RGB(240, 240, 240) : RGB(0, 0, 0);
-    format.yHeight = 180;
-    ::StringCchCopy(format.szFaceName, LF_FACESIZE, L"Consolas");
+//     // Переустанавливаем форматирование для всего текста
+//     CHARFORMAT2W format{};
+//     format.cbSize = sizeof(format);
+//     format.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
+//     format.crTextColor = isDarkTheme_ ? RGB(240, 240, 240) : RGB(0, 0, 0);
+//     format.yHeight = 180;
+//     ::StringCchCopy(format.szFaceName, LF_FACESIZE, L"Consolas");
     
-    ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&format));
+//     ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&format));
     
-    // Восстанавливаем позицию
-    ::SendMessage(richLog_, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
-    ::SendMessage(richLog_, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
-}
+//     // Восстанавливаем позицию
+//     ::SendMessage(richLog_, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
+//     ::SendMessage(richLog_, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+// }
 
 
 void MainWindow::CreateThemeBrushes(bool darkMode) {
+    // Сначала удаляем старые
+    DestroyThemeBrushes();
+    
     if (darkMode) {
         bgBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
         editBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
         comboBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
+        groupBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
+        staticBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
+        ledBrushConnected_ = ::CreateSolidBrush(RGB(40, 140, 60));
+        ledBrushDisconnected_ = ::CreateSolidBrush(RGB(180, 40, 40));
     } else {
         bgBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
         editBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
         comboBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
+        groupBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
+        staticBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
+        ledBrushConnected_ = ::CreateSolidBrush(RGB(50, 160, 70));
+        ledBrushDisconnected_ = ::CreateSolidBrush(RGB(200, 50, 50));
     }
 }
 
@@ -534,7 +476,10 @@ void MainWindow::DestroyThemeBrushes() {
     if (bgBrush_) { ::DeleteObject(bgBrush_); bgBrush_ = nullptr; }
     if (editBrush_) { ::DeleteObject(editBrush_); editBrush_ = nullptr; }
     if (comboBrush_) { ::DeleteObject(comboBrush_); comboBrush_ = nullptr; }
+    if (groupBrush_) { ::DeleteObject(groupBrush_); groupBrush_ = nullptr; }
+    if (staticBrush_) { ::DeleteObject(staticBrush_); staticBrush_ = nullptr; }
 }
+
 // Сохранение темы в реестр
 void MainWindow::SaveThemeSetting(bool darkMode) {
     HKEY hKey;
@@ -549,24 +494,24 @@ void MainWindow::SaveThemeSetting(bool darkMode) {
 }
 
 // Загрузка темы (вызвать в WM_CREATE)
-void MainWindow::LoadThemeSetting() {
-    HKEY hKey;
-    DWORD darkMode = 0;
-    DWORD size = sizeof(darkMode);
-    DWORD type = REG_DWORD;
+// void MainWindow::LoadThemeSetting() {
+//     HKEY hKey;
+//     DWORD darkMode = 0;
+//     DWORD size = sizeof(darkMode);
+//     DWORD type = REG_DWORD;
     
-    if (::RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\COMTerminal", 
-        0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        if (::RegQueryValueExW(hKey, L"Theme", nullptr, &type, 
-            reinterpret_cast<LPBYTE>(&darkMode), &size) == ERROR_SUCCESS) {
-            isDarkTheme_ = (darkMode == 1);
-        }
-        ::RegCloseKey(hKey);
-    }
+//     if (::RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\COMTerminal", 
+//         0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+//         if (::RegQueryValueExW(hKey, L"Theme", nullptr, &type, 
+//             reinterpret_cast<LPBYTE>(&darkMode), &size) == ERROR_SUCCESS) {
+//             isDarkTheme_ = (darkMode == 1);
+//         }
+//         ::RegCloseKey(hKey);
+//     }
     
-    // Применяем тему при загрузке
-    ApplyTheme(isDarkTheme_);
-}
+//     // Применяем тему при загрузке
+//     ApplyTheme(isDarkTheme_);
+// }
 
 void MainWindow::UpdateThemeMenu() {
     HMENU menu = ::GetMenu(window_);
@@ -744,12 +689,12 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
-        case IDM_VIEW_LIGHT_THEME:
-            ApplyTheme(false);
-            return 0;
-        case IDM_VIEW_DARK_THEME:
-            ApplyTheme(true);
-            return 0;
+        // case IDM_VIEW_LIGHT_THEME:
+        //     ApplyTheme(false);
+        //     return 0;
+        // case IDM_VIEW_DARK_THEME:
+        //     ApplyTheme(true);
+        //     return 0;
         case IDM_FILE_EXIT:
             ::DestroyWindow(hwnd);
             return 0;
@@ -789,73 +734,100 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         break;
         
-    case WM_CTLCOLORBTN: {
-        HDC dc = reinterpret_cast<HDC>(wParam);
-        if (isDarkTheme_) {
-            ::SetBkColor(dc, RGB(32, 32, 32));
-            return reinterpret_cast<LRESULT>(::GetStockObject(DC_BRUSH));
-        }
-        break;
-    }
-    case WM_CTLCOLOREDIT: {
-        HDC dc = reinterpret_cast<HDC>(wParam);
+    // case WM_CTLCOLORBTN: {
+    //     HWND control = reinterpret_cast<HWND>(lParam);
+    //     HDC dc = reinterpret_cast<HDC>(wParam);
         
-        if (isDarkTheme_) {
-            // Темная тема для полей ввода
-            ::SetBkColor(dc, RGB(45, 45, 45));
-            ::SetTextColor(dc, RGB(255, 255, 255));
-            static HBRUSH editBrush = ::CreateSolidBrush(RGB(45, 45, 45));
-            return reinterpret_cast<LRESULT>(editBrush);
-        }
-        break;
-    }
-    case WM_CTLCOLORLISTBOX: {
-        HDC dc = reinterpret_cast<HDC>(wParam);
+    //     // Проверяем, это GroupBox?
+    //     wchar_t className[64];
+    //     ::GetClassName(control, className, 64);
         
-        if (isDarkTheme_) {
-            // Темная тема для выпадающих списков
-            ::SetBkColor(dc, RGB(45, 45, 45));
-            ::SetTextColor(dc, RGB(240, 240, 240));
-            static HBRUSH comboBrush = ::CreateSolidBrush(RGB(45, 45, 45));
-            return reinterpret_cast<LRESULT>(comboBrush);
-        }
-        break;
-    }
-    case WM_CTLCOLORSTATIC: {
-        HWND control = reinterpret_cast<HWND>(lParam);
-        HDC dc = reinterpret_cast<HDC>(wParam);
+    //     if (wcscmp(className, WC_BUTTONW) == 0) {
+    //         LONG style = ::GetWindowLongW(control, GWL_STYLE);
+    //         if (style & BS_GROUPBOX) {
+    //             if (isDarkTheme_) {
+    //                 ::SetBkColor(dc, RGB(32, 32, 32));
+    //                 ::SetTextColor(dc, RGB(240, 240, 240));
+    //                 return reinterpret_cast<LRESULT>(groupBrush_);
+    //             } else {
+    //                 ::SetBkColor(dc, RGB(240, 240, 240));
+    //                 ::SetTextColor(dc, RGB(0, 0, 0));
+    //                 return reinterpret_cast<LRESULT>(groupBrush_);
+    //             }
+    //         }
+    //     }
+    //     break;
+    // }
+    
+    // case WM_CTLCOLOREDIT: {
+    //     HDC dc = reinterpret_cast<HDC>(wParam);
         
-        if (isDarkTheme_) {
-            // Темная тема - темный фон, светлый текст
-            ::SetBkColor(dc, RGB(32, 32, 32));
-            ::SetTextColor(dc, RGB(240, 240, 240));
+    //     if (isDarkTheme_) {
+    //         ::SetBkColor(dc, RGB(45, 45, 45));
+    //         ::SetTextColor(dc, RGB(255, 255, 255));
+    //         return reinterpret_cast<LRESULT>(editBrush_);
+    //     } else {
+    //         ::SetBkColor(dc, RGB(255, 255, 255));
+    //         ::SetTextColor(dc, RGB(0, 0, 0));
+    //         return reinterpret_cast<LRESULT>(editBrush_);
+    //     }
+    //     break;
+    // }
+
+    // case WM_CTLCOLORLISTBOX: {
+    //     HDC dc = reinterpret_cast<HDC>(wParam);
+        
+    //     if (isDarkTheme_) {
+    //         ::SetBkColor(dc, RGB(45, 45, 45));
+    //         ::SetTextColor(dc, RGB(240, 240, 240));
+    //         return reinterpret_cast<LRESULT>(comboBrush_);
+    //     }
+    //     break;
+    // }
+
+    // case WM_CTLCOLORSTATIC: {
+    //     HWND control = reinterpret_cast<HWND>(lParam);
+    //     HDC dc = reinterpret_cast<HDC>(wParam);
+        
+    //     if (isDarkTheme_) {
+    //         if (control == ledStatus_) {
+    //             const bool connected = serialPort_.IsOpen();
+    //             ::SetBkColor(dc, connected ? RGB(40, 140, 60) : RGB(180, 40, 40));
+    //             ::SetTextColor(dc, RGB(255, 255, 255));
+    //             return reinterpret_cast<LRESULT>(connected ? 
+    //                 ledBrushConnected_ : ledBrushDisconnected_);
+    //         }
             
-            // LED статус - особый цвет
-            if (control == ledStatus_) {
-                const bool connected = serialPort_.IsOpen();
-                ::SetBkColor(dc, connected ? RGB(40, 140, 60) : RGB(180, 40, 40));
-                ::SetTextColor(dc, RGB(255, 255, 255));
-                return reinterpret_cast<LRESULT>(connected ? 
-                    ledBrushConnected_ : ledBrushDisconnected_);
-            }
+    //         // Для ВСЕХ статиков - прозрачный фон!
+    //         ::SetBkMode(dc, TRANSPARENT);
+    //         ::SetTextColor(dc, RGB(240, 240, 240));
+    //         return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
+    //     } else {
+    //         if (control == ledStatus_) {
+    //             const bool connected = serialPort_.IsOpen();
+    //             ::SetBkColor(dc, connected ? RGB(50, 160, 70) : RGB(200, 50, 50));
+    //             ::SetTextColor(dc, RGB(255, 255, 255));
+    //             return reinterpret_cast<LRESULT>(connected ? 
+    //                 ledBrushConnected_ : ledBrushDisconnected_);
+    //         }
             
-            // Для остальных статиков - прозрачный фон
-            return reinterpret_cast<LRESULT>(::GetStockObject(DC_BRUSH));
-        } else {
-            // Светлая тема
-            if (control == ledStatus_) {
-                const bool connected = serialPort_.IsOpen();
-                ::SetBkColor(dc, connected ? RGB(50, 160, 70) : RGB(200, 50, 50));
-                ::SetTextColor(dc, RGB(255, 255, 255));
-                return reinterpret_cast<LRESULT>(connected ? 
-                    ledBrushConnected_ : ledBrushDisconnected_);
-            }
-            
-            // По умолчанию - системные цвета
-            return reinterpret_cast<LRESULT>(::GetStockObject(WHITE_BRUSH));
-        }
-        break;
-    }
+    //         // В светлой теме тоже делаем прозрачными!
+    //         ::SetBkMode(dc, TRANSPARENT);
+    //         ::SetTextColor(dc, RGB(0, 0, 0));
+    //         return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
+    //     }
+    //     break;
+    // }
+
+    // case WM_ERASEBKGND: {
+    //     HDC dc = reinterpret_cast<HDC>(wParam);
+    //     RECT rc;
+    //     ::GetClientRect(hwnd, &rc);
+        
+    //     HBRUSH brush = isDarkTheme_ ? bgBrush_ : reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+    //     ::FillRect(dc, &rc, brush);
+    //     return 1;
+    // }
 
     case WM_DEVICECHANGE:
         if (wParam == DBT_DEVICEARRIVAL || wParam == DBT_DEVICEREMOVECOMPLETE) {
@@ -874,7 +846,7 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     case WM_DESTROY:
         actions_->ClosePort();
-        SaveThemeSetting(isDarkTheme_);
+        // SaveThemeSetting(isDarkTheme_);
         if (deviceNotify_ != nullptr) {
             ::UnregisterDeviceNotification(deviceNotify_);
             deviceNotify_ = nullptr;
