@@ -1,9 +1,16 @@
 #pragma once
 
 #include <windows.h>
-
+#include <commctrl.h>
+#include <cstdlib>
+#include <limits>
 #include <string>
 #include <vector>
+
+#include "resource.h"
+#include "serial/PortScanner.h"
+#include "ui/MainWindow.h"
+
 
 #include "serial/SerialPort.h"
 

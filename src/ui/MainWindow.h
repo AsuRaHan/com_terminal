@@ -74,6 +74,9 @@ private:
     HWND comboRxMode_;
     HWND checkSaveLog_;
 
+    // Handle for tooltip window used to provide user hints
+    HWND tooltip_; // Added for UI hint support
+
     HBRUSH ledBrushDisconnected_;
     HBRUSH ledBrushConnected_;
 

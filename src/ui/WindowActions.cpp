@@ -1,15 +1,5 @@
 #include "ui/WindowActions.h"
 
-#include <windows.h>
-#include <commctrl.h>
-
-#include <cstdlib>
-#include <limits>
-
-#include "resource.h"
-#include "serial/PortScanner.h"
-#include "ui/MainWindow.h"
-
 namespace ui {
 
 namespace {

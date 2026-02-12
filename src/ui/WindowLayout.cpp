@@ -1,11 +1,5 @@
 #include "ui/WindowLayout.h"
 
-#include <windows.h>
-
-#include <algorithm>
-
-#include "ui/MainWindow.h"
-
 namespace ui {
 
 WindowLayout::WindowLayout(MainWindow& owner) : owner_(owner) {}

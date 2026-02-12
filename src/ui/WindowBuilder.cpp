@@ -1,12 +1,6 @@
 #include "ui/WindowBuilder.h"
 
-#include <windows.h>
-#include <commctrl.h>
-#include <richedit.h>
-#include <strsafe.h>
 
-#include "resource.h"
-#include "ui/MainWindow.h"
 
 namespace ui {
 

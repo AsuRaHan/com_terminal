@@ -1,10 +1,11 @@
 #pragma once
 
+
+#include <algorithm>
 #include <windows.h>
+#include "ui/MainWindow.h"
 
 namespace ui {
-
-class MainWindow;
 
 class WindowLayout final {
 public:
