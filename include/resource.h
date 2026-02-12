@@ -35,4 +35,15 @@
 #define IDC_CHK_SAVELOG 50026
 #define IDC_BTN_CLEAR 50027
 
+#define IDC_TX_TOTAL    50028
+#define IDC_RX_TOTAL    50029
+#define IDC_TX_RATE     50030
+#define IDC_RX_RATE     50031
+
+#define IDC_GROUP_PORT          50032
+#define IDC_GROUP_STATS         50033
+#define IDC_GROUP_TERMINAL_CTRL 50034
+#define IDC_GROUP_LOG           50035
+#define IDC_GROUP_SEND          50036
+
 #endif // COMTERMINAL_RESOURCE_H
