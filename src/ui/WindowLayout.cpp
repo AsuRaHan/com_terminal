@@ -48,14 +48,28 @@ void WindowLayout::ResizeChildren() const {
 
     y += rowHeight + gap;
 
-    ::MoveWindow(owner_.comboDataBits_, left, y, 120, comboDropHeight, TRUE);
-    ::MoveWindow(owner_.comboParity_, left + 130, y, 130, comboDropHeight, TRUE);
-    ::MoveWindow(owner_.comboStopBits_, left + 270, y, 120, comboDropHeight, TRUE);
-    ::MoveWindow(owner_.comboFlow_, left + 400, y, 140, comboDropHeight, TRUE);
-    ::MoveWindow(owner_.checkRts_, left + 545, y + 3, 60, rowHeight, TRUE);
-    ::MoveWindow(owner_.checkDtr_, left + 610, y + 3, 60, rowHeight, TRUE);
-    ::MoveWindow(owner_.comboRxMode_, right - 190, y, 90, comboDropHeight, TRUE);
-    ::MoveWindow(owner_.checkSaveLog_, right - 95, y + 3, 90, rowHeight, TRUE);
+    // Second row – serial parameters
+    const int dataBitsX = left;
+    const int parityX = dataBitsX + 120 + 10;   // 120 width + 10 gap
+    const int stopBitsX = parityX + 160 + 10;    // 160 width + 10 gap
+    const int flowX = stopBitsX + 120 + 10;      // 120 width + 10 gap
+
+    ::MoveWindow(owner_.comboDataBits_, dataBitsX, y, 120, comboDropHeight, TRUE);
+    ::MoveWindow(owner_.comboParity_, parityX, y, 160, comboDropHeight, TRUE);
+    ::MoveWindow(owner_.comboStopBits_, stopBitsX, y, 120, comboDropHeight, TRUE);
+    ::MoveWindow(owner_.comboFlow_, flowX, y, 140, comboDropHeight, TRUE);
+
+    // Position RTS/DTR checkboxes on the far right side, leaving space for RX mode and Save Log
+    const int rtsX = right - 280;   // leave room for two other controls
+    const int dtrX = rtsX + 70;     // small gap between them
+    ::MoveWindow(owner_.checkRts_, rtsX, y + 3, 60, rowHeight, TRUE);
+    ::MoveWindow(owner_.checkDtr_, dtrX, y + 3, 60, rowHeight, TRUE);
+
+    // RX mode combo and Save Log checkbox positioned after DTR
+    const int rxModeX = right - 140;
+    const int saveLogX = right - 50;
+    ::MoveWindow(owner_.comboRxMode_, rxModeX, y, 90, comboDropHeight, TRUE);
+    ::MoveWindow(owner_.checkSaveLog_, saveLogX, y + 3, 90, rowHeight, TRUE);
 
     y += rowHeight + gap;
 

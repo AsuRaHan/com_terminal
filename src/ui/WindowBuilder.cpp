@@ -67,7 +67,7 @@ void WindowBuilder::CreateControls() {
     for (const auto* rate : baudRates) {
         ::SendMessage(owner_.comboBaud_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(rate));
     }
-    ::SetWindowTextW(owner_.comboBaud_, L"115200");
+    ::SetWindowText(owner_.comboBaud_, L"115200");
 
     owner_.buttonRefresh_ = ::CreateWindowEx(
         0,
@@ -143,7 +143,35 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    // Removed duplicate Clear button definition and erroneous combo box creation
+    // Create parity selection control (positioned after Data Bits)
+    owner_.comboParity_ = ::CreateWindowEx(
+        0,
+        WC_COMBOBOXW,
+        nullptr,
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP,
+        0,
+        0,
+        0,
+        200,
+        owner_.window_,
+        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_COMBO_PARITY)),
+        owner_.instance_,
+        nullptr);
+
+    // Create stop bits selection control (positioned after Parity)
+    owner_.comboStopBits_ = ::CreateWindowEx(
+        0,
+        WC_COMBOBOXW,
+        nullptr,
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP,
+        0,
+        0,
+        0,
+        200,
+        owner_.window_,
+        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_COMBO_STOPBITS)),
+        owner_.instance_,
+        nullptr);
 
     owner_.comboFlow_ = ::CreateWindowEx(
         0,
