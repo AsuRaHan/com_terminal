@@ -13,7 +13,7 @@ namespace ui {
 WindowBuilder::WindowBuilder(MainWindow& owner) : owner_(owner) {}
 
 void WindowBuilder::CreateStatusBar() {
-    owner_.statusBar_ = ::CreateWindowExW(
+    owner_.statusBar_ = ::CreateWindowEx(
         0,
         STATUSCLASSNAMEW,
         nullptr,
@@ -28,14 +28,14 @@ void WindowBuilder::CreateStatusBar() {
         nullptr);
 
     int parts[3] = {260, 520, -1};
-    ::SendMessageW(owner_.statusBar_, SB_SETPARTS, 3, reinterpret_cast<LPARAM>(parts));
-    ::SendMessageW(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
-    ::SendMessageW(owner_.statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(L"TX: 0  RX: 0"));
-    ::SendMessageW(owner_.statusBar_, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(L"Ready"));
+    ::SendMessage(owner_.statusBar_, SB_SETPARTS, 3, reinterpret_cast<LPARAM>(parts));
+    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
+    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(L"TX: 0  RX: 0"));
+    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(L"Ready"));
 }
 
 void WindowBuilder::CreateControls() {
-    owner_.comboPort_ = ::CreateWindowExW(
+    owner_.comboPort_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -49,7 +49,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboBaud_ = ::CreateWindowExW(
+    owner_.comboBaud_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -65,11 +65,11 @@ void WindowBuilder::CreateControls() {
 
     constexpr const wchar_t* baudRates[] = {L"9600", L"19200", L"38400", L"57600", L"115200", L"230400", L"460800", L"921600"};
     for (const auto* rate : baudRates) {
-        ::SendMessageW(owner_.comboBaud_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(rate));
+        ::SendMessage(owner_.comboBaud_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(rate));
     }
     ::SetWindowTextW(owner_.comboBaud_, L"115200");
 
-    owner_.buttonRefresh_ = ::CreateWindowExW(
+    owner_.buttonRefresh_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"Refresh",
@@ -83,7 +83,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.buttonOpen_ = ::CreateWindowExW(
+    owner_.buttonOpen_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"Open",
@@ -97,7 +97,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.buttonClose_ = ::CreateWindowExW(
+    owner_.buttonClose_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"Close",
@@ -111,7 +111,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboDataBits_ = ::CreateWindowExW(
+    owner_.comboDataBits_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -125,7 +125,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboParity_ = ::CreateWindowExW(
+    owner_.comboParity_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -139,7 +139,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboStopBits_ = ::CreateWindowExW(
+    owner_.comboStopBits_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -153,7 +153,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboFlow_ = ::CreateWindowExW(
+    owner_.comboFlow_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -167,7 +167,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.checkRts_ = ::CreateWindowExW(
+    owner_.checkRts_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"RTS",
@@ -181,7 +181,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.checkDtr_ = ::CreateWindowExW(
+    owner_.checkDtr_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"DTR",
@@ -195,7 +195,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.comboRxMode_ = ::CreateWindowExW(
+    owner_.comboRxMode_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
         nullptr,
@@ -209,7 +209,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.checkSaveLog_ = ::CreateWindowExW(
+    owner_.checkSaveLog_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"Save log",
@@ -223,7 +223,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.ledStatus_ = ::CreateWindowExW(
+    owner_.ledStatus_ = ::CreateWindowEx(
         0,
         WC_STATICW,
         L"Disconnected",
@@ -237,7 +237,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.richLog_ = ::CreateWindowExW(
+    owner_.richLog_ = ::CreateWindowEx(
         WS_EX_CLIENTEDGE,
         MSFTEDIT_CLASS,
         L"",
@@ -251,7 +251,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.editSend_ = ::CreateWindowExW(
+    owner_.editSend_ = ::CreateWindowEx(
         WS_EX_CLIENTEDGE,
         WC_EDITW,
         L"",
@@ -265,7 +265,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.buttonSend_ = ::CreateWindowExW(
+    owner_.buttonSend_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
         L"Send",
@@ -285,43 +285,43 @@ void WindowBuilder::CreateControls() {
     format.yHeight = 180;
     format.bCharSet = DEFAULT_CHARSET;
     ::StringCchCopyW(format.szFaceName, LF_FACESIZE, L"Consolas");
-    ::SendMessageW(owner_.richLog_, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&format));
+    ::SendMessage(owner_.richLog_, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&format));
 }
 
 void WindowBuilder::FillConnectionDefaults() {
     constexpr const wchar_t* dataBits[] = {L"5", L"6", L"7", L"8"};
     for (const auto* v : dataBits) {
-        ::SendMessageW(owner_.comboDataBits_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
+        ::SendMessage(owner_.comboDataBits_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
     }
-    ::SendMessageW(owner_.comboDataBits_, CB_SETCURSEL, 3, 0);
+    ::SendMessage(owner_.comboDataBits_, CB_SETCURSEL, 3, 0);
 
     constexpr const wchar_t* parity[] = {L"None", L"Odd", L"Even", L"Mark", L"Space"};
     for (const auto* v : parity) {
-        ::SendMessageW(owner_.comboParity_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
+        ::SendMessage(owner_.comboParity_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
     }
-    ::SendMessageW(owner_.comboParity_, CB_SETCURSEL, 0, 0);
+    ::SendMessage(owner_.comboParity_, CB_SETCURSEL, 0, 0);
 
     constexpr const wchar_t* stopBits[] = {L"1", L"1.5", L"2"};
     for (const auto* v : stopBits) {
-        ::SendMessageW(owner_.comboStopBits_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
+        ::SendMessage(owner_.comboStopBits_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
     }
-    ::SendMessageW(owner_.comboStopBits_, CB_SETCURSEL, 0, 0);
+    ::SendMessage(owner_.comboStopBits_, CB_SETCURSEL, 0, 0);
 
     constexpr const wchar_t* flow[] = {L"None", L"RTS/CTS", L"XON/XOFF"};
     for (const auto* v : flow) {
-        ::SendMessageW(owner_.comboFlow_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
+        ::SendMessage(owner_.comboFlow_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
     }
-    ::SendMessageW(owner_.comboFlow_, CB_SETCURSEL, 0, 0);
+    ::SendMessage(owner_.comboFlow_, CB_SETCURSEL, 0, 0);
 
     constexpr const wchar_t* rxMode[] = {L"Text", L"HEX"};
     for (const auto* v : rxMode) {
-        ::SendMessageW(owner_.comboRxMode_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
+        ::SendMessage(owner_.comboRxMode_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(v));
     }
-    ::SendMessageW(owner_.comboRxMode_, CB_SETCURSEL, 1, 0);
+    ::SendMessage(owner_.comboRxMode_, CB_SETCURSEL, 1, 0);
 
-    ::SendMessageW(owner_.checkRts_, BM_SETCHECK, BST_UNCHECKED, 0);
-    ::SendMessageW(owner_.checkDtr_, BM_SETCHECK, BST_UNCHECKED, 0);
-    ::SendMessageW(owner_.checkSaveLog_, BM_SETCHECK, BST_UNCHECKED, 0);
+    ::SendMessage(owner_.checkRts_, BM_SETCHECK, BST_UNCHECKED, 0);
+    ::SendMessage(owner_.checkDtr_, BM_SETCHECK, BST_UNCHECKED, 0);
+    ::SendMessage(owner_.checkSaveLog_, BM_SETCHECK, BST_UNCHECKED, 0);
 }
 
 } // namespace ui

@@ -21,13 +21,13 @@ WindowActions::WindowActions(MainWindow& owner) : owner_(owner) {}
 void WindowActions::RefreshPorts() {
     const std::wstring previous = ComboText(owner_.comboPort_);
 
-    ::SendMessageW(owner_.comboPort_, CB_RESETCONTENT, 0, 0);
+    ::SendMessage(owner_.comboPort_, CB_RESETCONTENT, 0, 0);
     const auto ports = serial::PortScanner::Scan();
 
     int selectedIndex = -1;
     for (std::size_t i = 0; i < ports.size(); ++i) {
         const std::wstring text = ports[i].portName + L" - " + ports[i].friendlyName;
-        const LRESULT idx = ::SendMessageW(owner_.comboPort_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text.c_str()));
+        const LRESULT idx = ::SendMessage(owner_.comboPort_, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text.c_str()));
         if (idx >= 0 && previous == text) {
             selectedIndex = static_cast<int>(idx);
         }
@@ -38,7 +38,7 @@ void WindowActions::RefreshPorts() {
     }
 
     if (selectedIndex >= 0) {
-        ::SendMessageW(owner_.comboPort_, CB_SETCURSEL, static_cast<WPARAM>(selectedIndex), 0);
+        ::SendMessage(owner_.comboPort_, CB_SETCURSEL, static_cast<WPARAM>(selectedIndex), 0);
         const std::wstring msg = L"Port list refreshed: " + std::to_wstring(ports.size()) + L" found";
         owner_.AppendLog(LogKind::System, msg);
     } else {
@@ -51,14 +51,14 @@ bool WindowActions::OpenSelectedPort() {
         return true;
     }
 
-    const int selected = static_cast<int>(::SendMessageW(owner_.comboPort_, CB_GETCURSEL, 0, 0));
+    const int selected = static_cast<int>(::SendMessage(owner_.comboPort_, CB_GETCURSEL, 0, 0));
     if (selected < 0) {
         owner_.AppendLog(LogKind::Error, L"No COM port selected");
         return false;
     }
 
     wchar_t portText[256] = {};
-    ::SendMessageW(owner_.comboPort_, CB_GETLBTEXT, static_cast<WPARAM>(selected), reinterpret_cast<LPARAM>(portText));
+    ::SendMessage(owner_.comboPort_, CB_GETLBTEXT, static_cast<WPARAM>(selected), reinterpret_cast<LPARAM>(portText));
     std::wstring selection = portText;
     const std::size_t spacePos = selection.find(L' ');
     const std::wstring portName = (spacePos == std::wstring::npos) ? selection : selection.substr(0, spacePos);
@@ -87,7 +87,7 @@ bool WindowActions::OpenSelectedPort() {
     owner_.UpdateStatusText();
 
     ::SetWindowTextW(owner_.ledStatus_, L"Connected");
-    ::SendMessageW(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Connected"));
+    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Connected"));
     owner_.AppendLog(LogKind::System, L"Opened " + portName + L" @ " + std::to_wstring(settings.baudRate));
     return true;
 }
@@ -97,7 +97,7 @@ void WindowActions::ClosePort() {
     if (owner_.serialPort_.IsOpen()) {
         owner_.serialPort_.Close();
         ::SetWindowTextW(owner_.ledStatus_, L"Disconnected");
-        ::SendMessageW(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
+        ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
         owner_.AppendLog(LogKind::System, L"Port closed");
     }
 }
@@ -166,28 +166,28 @@ serial::PortSettings WindowActions::BuildPortSettingsFromUi(bool* ok) const {
     }
     s.baudRate = static_cast<DWORD>(baud);
 
-    const int bitsSel = static_cast<int>(::SendMessageW(owner_.comboDataBits_, CB_GETCURSEL, 0, 0));
+    const int bitsSel = static_cast<int>(::SendMessage(owner_.comboDataBits_, CB_GETCURSEL, 0, 0));
     s.dataBits = static_cast<BYTE>((bitsSel >= 0) ? (bitsSel + 5) : 8);
 
-    const int paritySel = static_cast<int>(::SendMessageW(owner_.comboParity_, CB_GETCURSEL, 0, 0));
+    const int paritySel = static_cast<int>(::SendMessage(owner_.comboParity_, CB_GETCURSEL, 0, 0));
     s.parity = (paritySel == 1) ? serial::ParityMode::Odd :
         (paritySel == 2) ? serial::ParityMode::Even :
         (paritySel == 3) ? serial::ParityMode::Mark :
         (paritySel == 4) ? serial::ParityMode::Space :
                            serial::ParityMode::None;
 
-    const int stopSel = static_cast<int>(::SendMessageW(owner_.comboStopBits_, CB_GETCURSEL, 0, 0));
+    const int stopSel = static_cast<int>(::SendMessage(owner_.comboStopBits_, CB_GETCURSEL, 0, 0));
     s.stopBits = (stopSel == 1) ? serial::StopBitsMode::OnePointFive :
         (stopSel == 2) ? serial::StopBitsMode::Two :
                          serial::StopBitsMode::One;
 
-    const int flowSel = static_cast<int>(::SendMessageW(owner_.comboFlow_, CB_GETCURSEL, 0, 0));
+    const int flowSel = static_cast<int>(::SendMessage(owner_.comboFlow_, CB_GETCURSEL, 0, 0));
     s.flowControl = (flowSel == 1) ? serial::FlowControlMode::Hardware :
         (flowSel == 2) ? serial::FlowControlMode::Software :
                          serial::FlowControlMode::None;
 
-    s.rts = (::SendMessageW(owner_.checkRts_, BM_GETCHECK, 0, 0) == BST_CHECKED);
-    s.dtr = (::SendMessageW(owner_.checkDtr_, BM_GETCHECK, 0, 0) == BST_CHECKED);
+    s.rts = (::SendMessage(owner_.checkRts_, BM_GETCHECK, 0, 0) == BST_CHECKED);
+    s.dtr = (::SendMessage(owner_.checkDtr_, BM_GETCHECK, 0, 0) == BST_CHECKED);
 
     if (ok != nullptr) {
         *ok = true;
@@ -196,7 +196,7 @@ serial::PortSettings WindowActions::BuildPortSettingsFromUi(bool* ok) const {
 }
 
 std::wstring WindowActions::FormatIncoming(const std::vector<uint8_t>& bytes) const {
-    const int mode = static_cast<int>(::SendMessageW(owner_.comboRxMode_, CB_GETCURSEL, 0, 0));
+    const int mode = static_cast<int>(::SendMessage(owner_.comboRxMode_, CB_GETCURSEL, 0, 0));
     if (mode == 0) {
         if (bytes.empty()) {
             return L"";

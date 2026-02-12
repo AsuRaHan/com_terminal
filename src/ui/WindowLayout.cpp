@@ -15,7 +15,7 @@ void WindowLayout::ResizeChildren() const {
     ::GetClientRect(owner_.window_, &client);
 
     if (owner_.statusBar_ != nullptr) {
-        ::SendMessageW(owner_.statusBar_, WM_SIZE, 0, 0);
+        ::SendMessage(owner_.statusBar_, WM_SIZE, 0, 0);
     }
 
     RECT statusRect{};

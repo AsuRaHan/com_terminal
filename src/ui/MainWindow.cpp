@@ -144,7 +144,7 @@ void MainWindow::AppendLog(LogKind kind, const std::wstring& text) {
 
     const COLORREF color = ColorForLogKind(kind);
     const std::wstring line = L"[" + BuildTimestamp() + L"] " + text + L"\r\n";
-    const bool saveToDisk = (::SendMessageW(checkSaveLog_, BM_GETCHECK, 0, 0) == BST_CHECKED);
+    const bool saveToDisk = (::SendMessage(checkSaveLog_, BM_GETCHECK, 0, 0) == BST_CHECKED);
     if (saveToDisk && logVirtualizer_.SessionFilePath().empty()) {
         logVirtualizer_.Initialize(L"logs");
     }
@@ -158,17 +158,17 @@ void MainWindow::AppendLog(LogKind kind, const std::wstring& text) {
 
 void MainWindow::AppendLineToRichEdit(const std::wstring& line, COLORREF color, bool scrollToCaret) {
     const int end = ::GetWindowTextLengthW(richLog_);
-    ::SendMessageW(richLog_, EM_SETSEL, static_cast<WPARAM>(end), static_cast<LPARAM>(end));
+    ::SendMessage(richLog_, EM_SETSEL, static_cast<WPARAM>(end), static_cast<LPARAM>(end));
 
     CHARFORMAT2W format{};
     format.cbSize = sizeof(format);
     format.dwMask = CFM_COLOR;
     format.crTextColor = color;
-    ::SendMessageW(richLog_, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&format));
+    ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&format));
 
-    ::SendMessageW(richLog_, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(line.c_str()));
+    ::SendMessage(richLog_, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(line.c_str()));
     if (scrollToCaret) {
-        ::SendMessageW(richLog_, EM_SCROLLCARET, 0, 0);
+        ::SendMessage(richLog_, EM_SCROLLCARET, 0, 0);
     }
 }
 
@@ -180,17 +180,17 @@ void MainWindow::RebuildRichEditFromVirtualBuffer() {
     rebuildingRichEdit_ = true;
 
     POINT scrollPos{};
-    ::SendMessageW(richLog_, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
+    ::SendMessage(richLog_, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
 
     CHARRANGE selection{};
-    ::SendMessageW(richLog_, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+    ::SendMessage(richLog_, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
 
-    ::SendMessageW(richLog_, WM_SETREDRAW, FALSE, 0);
+    ::SendMessage(richLog_, WM_SETREDRAW, FALSE, 0);
 
     SETTEXTEX setText{};
     setText.flags = ST_DEFAULT;
     setText.codepage = 1200;
-    ::SendMessageW(richLog_, EM_SETTEXTEX, reinterpret_cast<WPARAM>(&setText), reinterpret_cast<LPARAM>(L""));
+    ::SendMessage(richLog_, EM_SETTEXTEX, reinterpret_cast<WPARAM>(&setText), reinterpret_cast<LPARAM>(L""));
 
     const auto lines = logVirtualizer_.SnapshotBuffer();
     for (const auto& line : lines) {
@@ -204,10 +204,10 @@ void MainWindow::RebuildRichEditFromVirtualBuffer() {
     if (selection.cpMax < selection.cpMin) {
         selection.cpMax = selection.cpMin;
     }
-    ::SendMessageW(richLog_, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
-    ::SendMessageW(richLog_, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
+    ::SendMessage(richLog_, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+    ::SendMessage(richLog_, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
 
-    ::SendMessageW(richLog_, WM_SETREDRAW, TRUE, 0);
+    ::SendMessage(richLog_, WM_SETREDRAW, TRUE, 0);
     ::RedrawWindow(richLog_, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
 
     logVirtualizer_.MarkRewriteDone();
@@ -217,7 +217,7 @@ void MainWindow::RebuildRichEditFromVirtualBuffer() {
 void MainWindow::UpdateStatusText() {
     wchar_t buffer[128] = {};
     ::StringCchPrintfW(buffer, _countof(buffer), L"TX: %llu  RX: %llu", txBytes_, rxBytes_);
-    ::SendMessageW(statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(buffer));
+    ::SendMessage(statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(buffer));
 }
 
 std::wstring MainWindow::BuildTimestamp() {
