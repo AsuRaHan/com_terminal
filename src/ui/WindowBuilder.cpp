@@ -570,61 +570,61 @@ void WindowBuilder::FillConnectionDefaults() {
     ::SendMessage(owner_.checkSaveLog_, BM_SETCHECK, BST_UNCHECKED, 0);
 }
 
-void WindowBuilder::ApplyThemes() {
-    // Применяем тему ко всем контролам
-    HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
-    if (hUxTheme) {
-        typedef HRESULT (WINAPI *SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
-        auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
+// void WindowBuilder::ApplyThemes() {
+//     // Применяем тему ко всем контролам
+//     HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
+//     if (hUxTheme) {
+//         typedef HRESULT (WINAPI *SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
+//         auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
         
-        if (pSetWindowTheme) {
-            // Применяем Explorer тему ко всем контролам
-            struct {
-                HWND* hwnd;
-                const wchar_t* name;
-            } controls[] = {
-                {&owner_.groupPort_, L"Explorer"},
-                {&owner_.groupStats_, L"Explorer"},
-                {&owner_.groupLog_, L"Explorer"},
-                {&owner_.groupTerminalCtrl_, L"Explorer"},
-                {&owner_.groupSend_, L"Explorer"},
-                {&owner_.comboPort_, L"Explorer"},
-                {&owner_.comboBaud_, L"Explorer"},
-                {&owner_.buttonRefresh_, L"Explorer"},
-                {&owner_.buttonOpen_, L"Explorer"},
-                {&owner_.buttonClose_, L"Explorer"},
-                {&owner_.comboDataBits_, L"Explorer"},
-                {&owner_.comboParity_, L"Explorer"},
-                {&owner_.comboStopBits_, L"Explorer"},
-                {&owner_.comboFlow_, L"Explorer"},
-                {&owner_.checkRts_, L"Explorer"},
-                {&owner_.checkDtr_, L"Explorer"},
-                {&owner_.textTxTotal_, L"Explorer"},
-                {&owner_.textRxTotal_, L"Explorer"},
-                {&owner_.textTxRate_, L"Explorer"},
-                {&owner_.textRxRate_, L"Explorer"},
-                {&owner_.ledStatus_, L"Explorer"},
-                {&owner_.comboRxMode_, L"Explorer"},
-                {&owner_.checkSaveLog_, L"Explorer"},
-                {&owner_.buttonClear_, L"Explorer"},
-                {&owner_.editSend_, L"Explorer"},
-                {&owner_.buttonSend_, L"Explorer"},
-            };
+//         if (pSetWindowTheme) {
+//             // Применяем Explorer тему ко всем контролам
+//             struct {
+//                 HWND* hwnd;
+//                 const wchar_t* name;
+//             } controls[] = {
+//                 {&owner_.groupPort_, L"Explorer"},
+//                 {&owner_.groupStats_, L"Explorer"},
+//                 {&owner_.groupLog_, L"Explorer"},
+//                 {&owner_.groupTerminalCtrl_, L"Explorer"},
+//                 {&owner_.groupSend_, L"Explorer"},
+//                 {&owner_.comboPort_, L"Explorer"},
+//                 {&owner_.comboBaud_, L"Explorer"},
+//                 {&owner_.buttonRefresh_, L"Explorer"},
+//                 {&owner_.buttonOpen_, L"Explorer"},
+//                 {&owner_.buttonClose_, L"Explorer"},
+//                 {&owner_.comboDataBits_, L"Explorer"},
+//                 {&owner_.comboParity_, L"Explorer"},
+//                 {&owner_.comboStopBits_, L"Explorer"},
+//                 {&owner_.comboFlow_, L"Explorer"},
+//                 {&owner_.checkRts_, L"Explorer"},
+//                 {&owner_.checkDtr_, L"Explorer"},
+//                 {&owner_.textTxTotal_, L"Explorer"},
+//                 {&owner_.textRxTotal_, L"Explorer"},
+//                 {&owner_.textTxRate_, L"Explorer"},
+//                 {&owner_.textRxRate_, L"Explorer"},
+//                 {&owner_.ledStatus_, L"Explorer"},
+//                 {&owner_.comboRxMode_, L"Explorer"},
+//                 {&owner_.checkSaveLog_, L"Explorer"},
+//                 {&owner_.buttonClear_, L"Explorer"},
+//                 {&owner_.editSend_, L"Explorer"},
+//                 {&owner_.buttonSend_, L"Explorer"},
+//             };
             
-            for (const auto& ctrl : controls) {
-                if (*ctrl.hwnd) {
-                    pSetWindowTheme(*ctrl.hwnd, ctrl.name, nullptr);
-                }
-            }
+//             for (const auto& ctrl : controls) {
+//                 if (*ctrl.hwnd) {
+//                     pSetWindowTheme(*ctrl.hwnd, ctrl.name, nullptr);
+//                 }
+//             }
             
-            // RichEdit - особая тема
-            if (owner_.richLog_) {
-                pSetWindowTheme(owner_.richLog_, L"Explorer", nullptr);
-            }
-        }
+//             // RichEdit - особая тема
+//             if (owner_.richLog_) {
+//                 pSetWindowTheme(owner_.richLog_, L"Explorer", nullptr);
+//             }
+//         }
         
-        ::FreeLibrary(hUxTheme);
-    }
-}
+//         ::FreeLibrary(hUxTheme);
+//     }
+// }
 
 } // namespace ui

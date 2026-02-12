@@ -76,10 +76,10 @@ MainWindow::MainWindow(HINSTANCE instance):
     layout_(std::make_unique<WindowLayout>(*this)),
     actions_(std::make_unique<WindowActions>(*this)) {
 
-        INITCOMMONCONTROLSEX icc = {};
-        icc.dwSize = sizeof(icc);
-        icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS;
-        ::InitCommonControlsEx(&icc);
+        // INITCOMMONCONTROLSEX icc = {};
+        // icc.dwSize = sizeof(icc);
+        // icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS;
+        // ::InitCommonControlsEx(&icc);
         // ЯВНО активируем визуальные стили
         // ::SetWindowTheme(::GetDesktopWindow(), L" ", L" "); // Хак для активации визуальных стилей для всех контролов в приложении
 
@@ -123,6 +123,9 @@ bool MainWindow::Create(int nCmdShow) {
     if (window_ == nullptr) {
         return false;
     }
+
+    BOOL value = TRUE;
+    ::DwmSetWindowAttribute(window_, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 
     ::ShowWindow(window_, nCmdShow);
     ::UpdateWindow(window_);
@@ -449,49 +452,49 @@ void MainWindow::SaveLogToFile() {
 // }
 
 
-void MainWindow::CreateThemeBrushes(bool darkMode) {
-    // Сначала удаляем старые
-    DestroyThemeBrushes();
+// void MainWindow::CreateThemeBrushes(bool darkMode) {
+//     // Сначала удаляем старые
+//     DestroyThemeBrushes();
     
-    if (darkMode) {
-        bgBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
-        editBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
-        comboBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
-        groupBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
-        staticBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
-        ledBrushConnected_ = ::CreateSolidBrush(RGB(40, 140, 60));
-        ledBrushDisconnected_ = ::CreateSolidBrush(RGB(180, 40, 40));
-    } else {
-        bgBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
-        editBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
-        comboBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
-        groupBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
-        staticBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
-        ledBrushConnected_ = ::CreateSolidBrush(RGB(50, 160, 70));
-        ledBrushDisconnected_ = ::CreateSolidBrush(RGB(200, 50, 50));
-    }
-}
+//     if (darkMode) {
+//         bgBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
+//         editBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
+//         comboBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
+//         groupBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
+//         staticBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
+//         ledBrushConnected_ = ::CreateSolidBrush(RGB(40, 140, 60));
+//         ledBrushDisconnected_ = ::CreateSolidBrush(RGB(180, 40, 40));
+//     } else {
+//         bgBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
+//         editBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
+//         comboBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
+//         groupBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
+//         staticBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
+//         ledBrushConnected_ = ::CreateSolidBrush(RGB(50, 160, 70));
+//         ledBrushDisconnected_ = ::CreateSolidBrush(RGB(200, 50, 50));
+//     }
+// }
 
-void MainWindow::DestroyThemeBrushes() {
-    if (bgBrush_) { ::DeleteObject(bgBrush_); bgBrush_ = nullptr; }
-    if (editBrush_) { ::DeleteObject(editBrush_); editBrush_ = nullptr; }
-    if (comboBrush_) { ::DeleteObject(comboBrush_); comboBrush_ = nullptr; }
-    if (groupBrush_) { ::DeleteObject(groupBrush_); groupBrush_ = nullptr; }
-    if (staticBrush_) { ::DeleteObject(staticBrush_); staticBrush_ = nullptr; }
-}
+// void MainWindow::DestroyThemeBrushes() {
+//     if (bgBrush_) { ::DeleteObject(bgBrush_); bgBrush_ = nullptr; }
+//     if (editBrush_) { ::DeleteObject(editBrush_); editBrush_ = nullptr; }
+//     if (comboBrush_) { ::DeleteObject(comboBrush_); comboBrush_ = nullptr; }
+//     if (groupBrush_) { ::DeleteObject(groupBrush_); groupBrush_ = nullptr; }
+//     if (staticBrush_) { ::DeleteObject(staticBrush_); staticBrush_ = nullptr; }
+// }
 
 // Сохранение темы в реестр
-void MainWindow::SaveThemeSetting(bool darkMode) {
-    HKEY hKey;
-    if (::RegCreateKeyExW(HKEY_CURRENT_USER, 
-        L"Software\\COMTerminal", 0, nullptr, 
-        REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
-        DWORD value = darkMode ? 1 : 0;
-        ::RegSetValueExW(hKey, L"Theme", 0, REG_DWORD, 
-            reinterpret_cast<const BYTE*>(&value), sizeof(value));
-        ::RegCloseKey(hKey);
-    }
-}
+// void MainWindow::SaveThemeSetting(bool darkMode) {
+//     HKEY hKey;
+//     if (::RegCreateKeyExW(HKEY_CURRENT_USER, 
+//         L"Software\\COMTerminal", 0, nullptr, 
+//         REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+//         DWORD value = darkMode ? 1 : 0;
+//         ::RegSetValueExW(hKey, L"Theme", 0, REG_DWORD, 
+//             reinterpret_cast<const BYTE*>(&value), sizeof(value));
+//         ::RegCloseKey(hKey);
+//     }
+// }
 
 // Загрузка темы (вызвать в WM_CREATE)
 // void MainWindow::LoadThemeSetting() {
@@ -513,59 +516,61 @@ void MainWindow::SaveThemeSetting(bool darkMode) {
 //     ApplyTheme(isDarkTheme_);
 // }
 
-void MainWindow::UpdateThemeMenu() {
-    HMENU menu = ::GetMenu(window_);
-    if (!menu) return;
+// void MainWindow::UpdateThemeMenu() {
+//     HMENU menu = ::GetMenu(window_);
+//     if (!menu) return;
     
-    // Находим View меню
-    int viewMenuPos = -1;
-    int menuCount = ::GetMenuItemCount(menu);
-    for (int i = 0; i < menuCount; i++) {
-        wchar_t buffer[64];
-        MENUITEMINFOW mii = { sizeof(mii) };
-        mii.fMask = MIIM_STRING;
-        mii.dwTypeData = buffer;
-        mii.cch = 64;
-        if (::GetMenuItemInfoW(menu, i, TRUE, &mii)) {
-            if (wcscmp(buffer, L"&View") == 0) {
-                viewMenuPos = i;
-                break;
-            }
-        }
-    }
+//     // Находим View меню
+//     int viewMenuPos = -1;
+//     int menuCount = ::GetMenuItemCount(menu);
+//     for (int i = 0; i < menuCount; i++) {
+//         wchar_t buffer[64];
+//         MENUITEMINFOW mii = { sizeof(mii) };
+//         mii.fMask = MIIM_STRING;
+//         mii.dwTypeData = buffer;
+//         mii.cch = 64;
+//         if (::GetMenuItemInfoW(menu, i, TRUE, &mii)) {
+//             if (wcscmp(buffer, L"&View") == 0) {
+//                 viewMenuPos = i;
+//                 break;
+//             }
+//         }
+//     }
     
-    if (viewMenuPos == -1) return;
+//     if (viewMenuPos == -1) return;
     
-    HMENU viewMenu = ::GetSubMenu(menu, viewMenuPos);
-    if (!viewMenu) return;
+//     HMENU viewMenu = ::GetSubMenu(menu, viewMenuPos);
+//     if (!viewMenu) return;
     
-    // Ищем подменю Theme
-    int themeSubMenuPos = -1;
-    int viewMenuItemCount = ::GetMenuItemCount(viewMenu);
-    for (int i = 0; i < viewMenuItemCount; i++) {
-        wchar_t buffer[64];
-        MENUITEMINFOW mii = { sizeof(mii) };
-        mii.fMask = MIIM_STRING | MIIM_SUBMENU;
-        mii.dwTypeData = buffer;
-        mii.cch = 64;
-        if (::GetMenuItemInfoW(viewMenu, i, TRUE, &mii)) {
-            if (wcscmp(buffer, L"Theme") == 0) {
-                themeSubMenuPos = i;
-                break;
-            }
-        }
-    }
+//     // Ищем подменю Theme
+//     int themeSubMenuPos = -1;
+//     int viewMenuItemCount = ::GetMenuItemCount(viewMenu);
+//     for (int i = 0; i < viewMenuItemCount; i++) {
+//         wchar_t buffer[64];
+//         MENUITEMINFOW mii = { sizeof(mii) };
+//         mii.fMask = MIIM_STRING | MIIM_SUBMENU;
+//         mii.dwTypeData = buffer;
+//         mii.cch = 64;
+//         if (::GetMenuItemInfoW(viewMenu, i, TRUE, &mii)) {
+//             if (wcscmp(buffer, L"Theme") == 0) {
+//                 themeSubMenuPos = i;
+//                 break;
+//             }
+//         }
+//     }
     
-    if (themeSubMenuPos == -1) return;
+//     if (themeSubMenuPos == -1) return;
     
-    HMENU themeMenu = ::GetSubMenu(viewMenu, themeSubMenuPos);
-    if (!themeMenu) return;
+//     HMENU themeMenu = ::GetSubMenu(viewMenu, themeSubMenuPos);
+//     if (!themeMenu) return;
     
-    ::CheckMenuItem(themeMenu, IDM_VIEW_LIGHT_THEME, 
-        MF_BYCOMMAND | (isDarkTheme_ ? MF_UNCHECKED : MF_CHECKED));
-    ::CheckMenuItem(themeMenu, IDM_VIEW_DARK_THEME, 
-        MF_BYCOMMAND | (isDarkTheme_ ? MF_CHECKED : MF_UNCHECKED));
-}
+//     ::CheckMenuItem(themeMenu, IDM_VIEW_LIGHT_THEME, 
+//         MF_BYCOMMAND | (isDarkTheme_ ? MF_UNCHECKED : MF_CHECKED));
+//     ::CheckMenuItem(themeMenu, IDM_VIEW_DARK_THEME, 
+//         MF_BYCOMMAND | (isDarkTheme_ ? MF_CHECKED : MF_UNCHECKED));
+// }
+
+
 
 std::wstring MainWindow::BuildTimestamp() {
     SYSTEMTIME st{};

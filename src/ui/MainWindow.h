@@ -57,12 +57,12 @@ private:
     static std::wstring BytesToHex(const std::vector<uint8_t>& bytes);
 
     bool isDarkTheme_;
-    void ApplyTheme(bool darkMode);
-    void UpdateThemeMenu();
+    // void ApplyTheme(bool darkMode);
+    // void UpdateThemeMenu();
         // Цвета для лога с учетом темы - НЕ статический!
     COLORREF ColorForLogKindWithTheme(LogKind kind);
 
-    COLORREF AdjustColorForTheme(COLORREF color, LogKind kind);
+    // COLORREF AdjustColorForTheme(COLORREF color, LogKind kind);
 
     HINSTANCE instance_;
     HWND window_;
@@ -120,10 +120,10 @@ private:
     HBRUSH groupBrush_;     // Кисть для групп
     HBRUSH staticBrush_;    // Кисть для статиков
 
-    // Добавь методы:
-    void CreateThemeBrushes(bool darkMode); 
-    void DestroyThemeBrushes();
-    void ApplyThemesToAllControls();
+    // Добавь методы для управления темой и цветами, а также для обновления состояния UI
+    // void CreateThemeBrushes(bool darkMode); 
+    // void DestroyThemeBrushes();
+    // void ApplyThemesToAllControls();
     // Toggles visibility of the Open/Close buttons depending on connection status.
     void UpdateConnectionButtons();
     void ClearTerminal(); // Clears the rich edit log and resets counters
@@ -131,9 +131,9 @@ private:
     void CopySelectedText(); // Copies selected text from rich edit to clipboard
     void SelectAllText(); // Selects all text in the rich edit control
     void SaveLogToFile(); // Opens Save File dialog and saves log content to a file
-    void SaveThemeSetting(bool darkMode); // Saves the user's theme preference to the registry or config file
-    void LoadThemeSetting(); // Loads the user's theme preference from the registry or config file
-    void ReapplyLogColors(); // Reapplies colors to existing log entries based on current theme
+    // void SaveThemeSetting(bool darkMode); // Saves the user's theme preference to the registry or config file
+    // void LoadThemeSetting(); // Loads the user's theme preference from the registry or config file
+    // void ReapplyLogColors(); // Reapplies colors to existing log entries based on current theme
 };
 
 } // namespace ui
