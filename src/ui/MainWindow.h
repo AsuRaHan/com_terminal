@@ -113,6 +113,13 @@ private:
     std::unique_ptr<WindowBuilder> builder_;
     std::unique_ptr<WindowLayout> layout_;
     std::unique_ptr<WindowActions> actions_;
+
+    HBRUSH bgBrush_;        // Кисть фона
+    HBRUSH editBrush_;      // Кисть для EDIT
+    HBRUSH comboBrush_;     // Кисть для COMBOBOX
+    
+    void CreateThemeBrushes(bool darkMode); 
+    void DestroyThemeBrushes();
     // Toggles visibility of the Open/Close buttons depending on connection status.
     void UpdateConnectionButtons();
     void ClearTerminal(); // Clears the rich edit log and resets counters
@@ -122,6 +129,7 @@ private:
     void SaveLogToFile(); // Opens Save File dialog and saves log content to a file
     void SaveThemeSetting(bool darkMode); // Saves the user's theme preference to the registry or config file
     void LoadThemeSetting(); // Loads the user's theme preference from the registry or config file
+    void ReapplyLogColors(); // Reapplies colors to existing log entries based on current theme
 };
 
 } // namespace ui

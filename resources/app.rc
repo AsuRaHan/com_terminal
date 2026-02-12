@@ -72,7 +72,7 @@ BEGIN
         BLOCK "041904B0"
         BEGIN
             VALUE "CompanyName", "COM Terminal"
-            VALUE "FileDescription", "Professional COM Port Terminal"
+            VALUE "FileDescription", "AsuRaHan COM Port Terminal"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "COMTerminal"
             VALUE "LegalCopyright", ""

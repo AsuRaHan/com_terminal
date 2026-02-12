@@ -1,5 +1,8 @@
 #include "ui/WindowBuilder.h"
 
+#include <uxtheme.h>
+#pragma comment(lib, "uxtheme.lib")
+
 namespace ui {
 
 WindowBuilder::WindowBuilder(MainWindow& owner) : owner_(owner) {}
@@ -26,7 +29,7 @@ void WindowBuilder::CreateStatusBar() {
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(L"TX: 0  RX: 0"));
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(L"Ready"));
-    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 3, reinterpret_cast<LPARAM>(L"Press F1 for help"));
+    // ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 3, reinterpret_cast<LPARAM>(L"Press F1 for help"));
 }
 
 void WindowBuilder::CreateTooltips() {
@@ -214,16 +217,16 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    owner_.groupStats_ = ::CreateWindowEx(
-        0,
-        WC_BUTTONW,
-        L"Statistics",
-        WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-        0, 0, 0, 0,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_GROUP_STATS)),
-        owner_.instance_,
-        nullptr);
+    // owner_.groupStats_ = ::CreateWindowEx(
+    //     0,
+    //     WC_BUTTONW,
+    //     L"Statistics",
+    //     WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
+    //     0, 0, 0, 0,
+    //     owner_.window_,
+    //     reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_GROUP_STATS)),
+    //     owner_.instance_,
+    //     nullptr);
 
     owner_.groupLog_ = ::CreateWindowEx(
         0,
@@ -323,8 +326,6 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    // ... остальные контролы (без изменений) ...
-
     owner_.comboDataBits_ = ::CreateWindowEx(
         0,
         WC_COMBOBOXW,
@@ -392,49 +393,49 @@ void WindowBuilder::CreateControls() {
         nullptr);
 
     // === Statistics элементы ===
-    owner_.textTxTotal_ = ::CreateWindowEx(
-        0,
-        WC_STATICW,
-        L"TX: 0 bytes",
-        WS_CHILD | WS_VISIBLE | SS_LEFT,
-        0, 0, 0, 0,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_TX_TOTAL)),
-        owner_.instance_,
-        nullptr);
+    // owner_.textTxTotal_ = ::CreateWindowEx(
+    //     0,
+    //     WC_STATICW,
+    //     L"TX: 0 bytes",
+    //     WS_CHILD | WS_VISIBLE | SS_LEFT,
+    //     0, 0, 0, 0,
+    //     owner_.window_,
+    //     reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_TX_TOTAL)),
+    //     owner_.instance_,
+    //     nullptr);
 
-    owner_.textRxTotal_ = ::CreateWindowEx(
-        0,
-        WC_STATICW,
-        L"RX: 0 bytes",
-        WS_CHILD | WS_VISIBLE | SS_LEFT,
-        0, 0, 0, 0,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_RX_TOTAL)),
-        owner_.instance_,
-        nullptr);
+    // owner_.textRxTotal_ = ::CreateWindowEx(
+    //     0,
+    //     WC_STATICW,
+    //     L"RX: 0 bytes",
+    //     WS_CHILD | WS_VISIBLE | SS_LEFT,
+    //     0, 0, 0, 0,
+    //     owner_.window_,
+    //     reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_RX_TOTAL)),
+    //     owner_.instance_,
+    //     nullptr);
 
-    owner_.textTxRate_ = ::CreateWindowEx(
-        0,
-        WC_STATICW,
-        L"TX Rate: 0 bps",
-        WS_CHILD | WS_VISIBLE | SS_LEFT,
-        0, 0, 0, 0,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_TX_RATE)),
-        owner_.instance_,
-        nullptr);
+    // owner_.textTxRate_ = ::CreateWindowEx(
+    //     0,
+    //     WC_STATICW,
+    //     L"TX Rate: 0 bps",
+    //     WS_CHILD | WS_VISIBLE | SS_LEFT,
+    //     0, 0, 0, 0,
+    //     owner_.window_,
+    //     reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_TX_RATE)),
+    //     owner_.instance_,
+    //     nullptr);
 
-    owner_.textRxRate_ = ::CreateWindowEx(
-        0,
-        WC_STATICW,
-        L"RX Rate: 0 bps",
-        WS_CHILD | WS_VISIBLE | SS_LEFT,
-        0, 0, 0, 0,
-        owner_.window_,
-        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_RX_RATE)),
-        owner_.instance_,
-        nullptr);
+    // owner_.textRxRate_ = ::CreateWindowEx(
+    //     0,
+    //     WC_STATICW,
+    //     L"RX Rate: 0 bps",
+    //     WS_CHILD | WS_VISIBLE | SS_LEFT,
+    //     0, 0, 0, 0,
+    //     owner_.window_,
+    //     reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_RX_RATE)),
+    //     owner_.instance_,
+    //     nullptr);
 
     // === Terminal Control элементы ===
     owner_.ledStatus_ = ::CreateWindowEx(
@@ -515,6 +516,7 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
+    ApplyThemes();
     // ============ Установка шрифта для лога ============
     CHARFORMAT2W format{};
     format.cbSize = sizeof(format);
@@ -527,6 +529,10 @@ void WindowBuilder::CreateControls() {
     // ============ СОЗДАЕМ ПОДСКАЗКИ ============
     CreateTooltips();
 }
+
+
+
+
 
 void WindowBuilder::FillConnectionDefaults() {
     constexpr const wchar_t* dataBits[] = {L"5", L"6", L"7", L"8"};
@@ -562,6 +568,63 @@ void WindowBuilder::FillConnectionDefaults() {
     ::SendMessage(owner_.checkRts_, BM_SETCHECK, BST_UNCHECKED, 0);
     ::SendMessage(owner_.checkDtr_, BM_SETCHECK, BST_UNCHECKED, 0);
     ::SendMessage(owner_.checkSaveLog_, BM_SETCHECK, BST_UNCHECKED, 0);
+}
+
+void WindowBuilder::ApplyThemes() {
+    // Применяем тему ко всем контролам
+    HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
+    if (hUxTheme) {
+        typedef HRESULT (WINAPI *SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
+        auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
+        
+        if (pSetWindowTheme) {
+            // Применяем Explorer тему ко всем контролам
+            struct {
+                HWND* hwnd;
+                const wchar_t* name;
+            } controls[] = {
+                {&owner_.groupPort_, L"Explorer"},
+                {&owner_.groupStats_, L"Explorer"},
+                {&owner_.groupLog_, L"Explorer"},
+                {&owner_.groupTerminalCtrl_, L"Explorer"},
+                {&owner_.groupSend_, L"Explorer"},
+                {&owner_.comboPort_, L"Explorer"},
+                {&owner_.comboBaud_, L"Explorer"},
+                {&owner_.buttonRefresh_, L"Explorer"},
+                {&owner_.buttonOpen_, L"Explorer"},
+                {&owner_.buttonClose_, L"Explorer"},
+                {&owner_.comboDataBits_, L"Explorer"},
+                {&owner_.comboParity_, L"Explorer"},
+                {&owner_.comboStopBits_, L"Explorer"},
+                {&owner_.comboFlow_, L"Explorer"},
+                {&owner_.checkRts_, L"Explorer"},
+                {&owner_.checkDtr_, L"Explorer"},
+                {&owner_.textTxTotal_, L"Explorer"},
+                {&owner_.textRxTotal_, L"Explorer"},
+                {&owner_.textTxRate_, L"Explorer"},
+                {&owner_.textRxRate_, L"Explorer"},
+                {&owner_.ledStatus_, L"Explorer"},
+                {&owner_.comboRxMode_, L"Explorer"},
+                {&owner_.checkSaveLog_, L"Explorer"},
+                {&owner_.buttonClear_, L"Explorer"},
+                {&owner_.editSend_, L"Explorer"},
+                {&owner_.buttonSend_, L"Explorer"},
+            };
+            
+            for (const auto& ctrl : controls) {
+                if (*ctrl.hwnd) {
+                    pSetWindowTheme(*ctrl.hwnd, ctrl.name, nullptr);
+                }
+            }
+            
+            // RichEdit - особая тема
+            if (owner_.richLog_) {
+                pSetWindowTheme(owner_.richLog_, L"Explorer", nullptr);
+            }
+        }
+        
+        ::FreeLibrary(hUxTheme);
+    }
 }
 
 } // namespace ui

@@ -139,31 +139,31 @@ void WindowLayout::ResizeChildren() const {
     ::MoveWindow(owner_.checkDtr_, x, y + 3, CHECK_DTR_WIDTH, ROW_HEIGHT, TRUE);
 
     // ============ ГРУППА 2: Statistics ============
-    RECT group2Rect = {
-        group1Rect.right + GAP,
-        top,
-        right,
-        group1Rect.bottom
-    };
+    // RECT group2Rect = {
+    //     group1Rect.right + GAP,
+    //     top,
+    //     right,
+    //     group1Rect.bottom
+    // };
     
-    ::MoveWindow(owner_.groupStats_,
-                 group2Rect.left, group2Rect.top,
-                 group2Rect.right - group2Rect.left,
-                 group2Rect.bottom - group2Rect.top, TRUE);
+    // ::MoveWindow(owner_.groupStats_,
+    //              group2Rect.left, group2Rect.top,
+    //              group2Rect.right - group2Rect.left,
+    //              group2Rect.bottom - group2Rect.top, TRUE);
 
     // Статистика - резиновая ширина
-    x = group2Rect.left + GROUP_PADDING;
-    y = group2Rect.top + GROUP_PADDING + 8;
+    // x = group2Rect.left + GROUP_PADDING;
+    // y = group2Rect.top + GROUP_PADDING + 8;
     
-    int statsItemWidth = (group2Rect.right - group2Rect.left - (GROUP_PADDING * 2) - (GAP * 3)) / 4;
+    // int statsItemWidth = (group2Rect.right - group2Rect.left - (GROUP_PADDING * 2) - (GAP * 3)) / 4;
     
-    ::MoveWindow(owner_.textTxTotal_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
-    x += statsItemWidth + GAP;
-    ::MoveWindow(owner_.textRxTotal_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
-    x += statsItemWidth + GAP;
-    ::MoveWindow(owner_.textTxRate_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
-    x += statsItemWidth + GAP;
-    ::MoveWindow(owner_.textRxRate_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
+    // ::MoveWindow(owner_.textTxTotal_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
+    // x += statsItemWidth + GAP;
+    // ::MoveWindow(owner_.textRxTotal_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
+    // x += statsItemWidth + GAP;
+    // ::MoveWindow(owner_.textTxRate_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
+    // x += statsItemWidth + GAP;
+    // ::MoveWindow(owner_.textRxRate_, x, y, statsItemWidth, ROW_HEIGHT, TRUE);
 
     // ============ ГРУППА 3: Terminal Log ============
     int logTop = group1Rect.bottom + GAP;

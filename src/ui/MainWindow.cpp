@@ -75,6 +75,14 @@ MainWindow::MainWindow(HINSTANCE instance):
     builder_(std::make_unique<WindowBuilder>(*this)),
     layout_(std::make_unique<WindowLayout>(*this)),
     actions_(std::make_unique<WindowActions>(*this)) {
+
+        INITCOMMONCONTROLSEX icc = {};
+        icc.dwSize = sizeof(icc);
+        icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS;
+        ::InitCommonControlsEx(&icc);
+        // ЯВНО активируем визуальные стили
+        ::SetWindowTheme(::GetDesktopWindow(), L" ", L" "); // Хак для активации визуальных стилей для всех контролов в приложении
+
         LoadThemeSetting(); // Загружаем сохраненную тему при запуске
 }
 
@@ -340,18 +348,18 @@ void MainWindow::SaveLogToFile() {
 void MainWindow::ApplyTheme(bool darkMode) {
     isDarkTheme_ = darkMode;
     
-    // 1. Для Windows 10/11 - системная темная тема заголовка
+    // 1. Системная тема заголовка
     if (::IsWindows10OrGreater()) {
         BOOL useDarkMode = darkMode ? TRUE : FALSE;
         ::DwmSetWindowAttribute(
             window_,
-            static_cast<DWORD>(DWMWA_USE_IMMERSIVE_DARK_MODE),  // 20
+            DWMWA_USE_IMMERSIVE_DARK_MODE,
             &useDarkMode,
             sizeof(useDarkMode)
         );
     }
     
-    // 2. Обновляем цвета для LED статуса
+    // 2. Кисти для LED
     if (ledBrushConnected_) {
         ::DeleteObject(ledBrushConnected_);
         ledBrushConnected_ = nullptr;
@@ -362,39 +370,171 @@ void MainWindow::ApplyTheme(bool darkMode) {
     }
     
     if (darkMode) {
-        // Темная тема
         ledBrushConnected_ = ::CreateSolidBrush(RGB(40, 140, 60));
         ledBrushDisconnected_ = ::CreateSolidBrush(RGB(180, 40, 40));
     } else {
-        // Светлая тема
         ledBrushConnected_ = ::CreateSolidBrush(RGB(50, 160, 70));
         ledBrushDisconnected_ = ::CreateSolidBrush(RGB(200, 50, 50));
     }
     
-    // 3. Обновляем текст LED статуса
+    // 3. Текст LED
     if (ledStatus_) {
         ::SetWindowTextW(ledStatus_, 
             serialPort_.IsOpen() ? L"Connected" : L"Disconnected");
         ::InvalidateRect(ledStatus_, nullptr, TRUE);
     }
     
-    // 4. Обновляем фон главного окна
-    HBRUSH bgBrush = ::CreateSolidBrush(darkMode ? RGB(32, 32, 32) : RGB(240, 240, 240));
-    ::SetClassLongPtrW(window_, GCLP_HBRBACKGROUND, reinterpret_cast<LONG_PTR>(bgBrush));
-    ::DeleteObject(bgBrush);
+    // 4. Фон главного окна - ИСПРАВЛЕНО
+    HBRUSH newBgBrush = ::CreateSolidBrush(darkMode ? RGB(32, 32, 32) : RGB(240, 240, 240));
+    HBRUSH oldBgBrush = reinterpret_cast<HBRUSH>(::SetClassLongPtrW(window_, 
+        GCLP_HBRBACKGROUND, reinterpret_cast<LONG_PTR>(newBgBrush)));
+    if (oldBgBrush) {
+        ::DeleteObject(oldBgBrush);  // Удаляем ТОЛЬКО старую кисть
+    }
+    // newBgBrush НЕ УДАЛЯЕМ - она теперь живет в классе окна
     
-    // 5. Принудительно перерисовываем всё
+    // 5. Перерисовка всех контролов
+    ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
+        MainWindow* self = reinterpret_cast<MainWindow*>(lParam);
+        
+        // Базовая перерисовка
+        ::InvalidateRect(hwnd, nullptr, TRUE);
+        
+        // Спецобработка для групп
+        wchar_t className[64];
+        ::GetClassNameW(hwnd, className, 64);
+        
+        if (wcscmp(className, WC_BUTTONW) == 0) {
+            LONG style = ::GetWindowLongW(hwnd, GWL_STYLE);
+            if (style & BS_GROUPBOX) {
+                ::RedrawWindow(hwnd, nullptr, nullptr, 
+                    RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
+            }
+        }
+        
+        // Спецобработка для RichEdit
+        if (hwnd == self->richLog_) {
+            // Принудительно перерисовываем с новыми цветами
+            ::RedrawWindow(hwnd, nullptr, nullptr, 
+                RDW_ERASE | RDW_INVALIDATE | RDW_FRAME);
+            
+            // Переустанавливаем форматирование для всего текста
+            CHARFORMAT2W format{};
+            format.cbSize = sizeof(format);
+            format.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
+            format.crTextColor = self->isDarkTheme_ ? RGB(240, 240, 240) : RGB(0, 0, 0);
+            format.yHeight = 180;
+            ::StringCchCopyW(format.szFaceName, LF_FACESIZE, L"Consolas");
+            
+            ::SendMessage(self->richLog_, EM_SETCHARFORMAT, SCF_ALL, 
+                reinterpret_cast<LPARAM>(&format));
+        }
+        
+        return TRUE;
+    }, reinterpret_cast<LPARAM>(this));
+
+    
+        // ============ ВАЖНО: Применяем визуальные стили ко всем контролам ============
+    HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
+    if (hUxTheme) {
+        typedef HRESULT (WINAPI *SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
+        auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
+        
+        if (pSetWindowTheme) {
+            // Перебираем все дочерние окна
+            ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
+                auto pSetWindowTheme = reinterpret_cast<SetWindowThemeFn>(lParam);
+                
+                // Для ВСЕХ контролов применяем Explorer тему
+                pSetWindowTheme(hwnd, L"Explorer", nullptr);
+                
+                // Для RichEdit особая тема
+                wchar_t className[64];
+                ::GetClassNameW(hwnd, className, 64);
+                if (wcscmp(className, L"RichEdit20W") == 0 || 
+                    wcscmp(className, MSFTEDIT_CLASS) == 0) {
+                    pSetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
+                }
+                
+                return TRUE;
+            }, reinterpret_cast<LPARAM>(pSetWindowTheme));
+        }
+        
+        ::FreeLibrary(hUxTheme);
+    }
+    
+    // ============ Теперь фон для контролов в темной теме ============
+    if (darkMode) {
+        // Перекрашиваем фон всех статиков и групп
+        ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
+            wchar_t className[64];
+            ::GetClassNameW(hwnd, className, 64);
+            
+            if (wcscmp(className, WC_STATICW) == 0 ||
+                wcscmp(className, WC_BUTTONW) == 0) {
+                // Для статиков и групп - темный фон
+                ::InvalidateRect(hwnd, nullptr, TRUE);
+            }
+            
+            return TRUE;
+        }, 0);
+    }
+
+    // ReapplyLogColors();  // Перекрашиваем весь существующий лог с учетом новой темы
+
+    // 6. Полная перерисовка окна
     ::RedrawWindow(window_, nullptr, nullptr, 
         RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
     
-    // 6. Обновляем меню
+    // 7. Меню и сохранение
     UpdateThemeMenu();
-    
-    // 7. Сохраняем настройку
     SaveThemeSetting(darkMode);
 }
 
 
+void MainWindow::ReapplyLogColors() {
+    if (!richLog_) return;
+    
+    // Сохраняем позицию
+    POINT scrollPos{};
+    ::SendMessage(richLog_, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
+    
+    CHARRANGE selection{};
+    ::SendMessage(richLog_, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+    
+    // Переустанавливаем форматирование для всего текста
+    CHARFORMAT2W format{};
+    format.cbSize = sizeof(format);
+    format.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
+    format.crTextColor = isDarkTheme_ ? RGB(240, 240, 240) : RGB(0, 0, 0);
+    format.yHeight = 180;
+    ::StringCchCopy(format.szFaceName, LF_FACESIZE, L"Consolas");
+    
+    ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&format));
+    
+    // Восстанавливаем позицию
+    ::SendMessage(richLog_, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
+    ::SendMessage(richLog_, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+}
+
+
+void MainWindow::CreateThemeBrushes(bool darkMode) {
+    if (darkMode) {
+        bgBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
+        editBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
+        comboBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
+    } else {
+        bgBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
+        editBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
+        comboBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
+    }
+}
+
+void MainWindow::DestroyThemeBrushes() {
+    if (bgBrush_) { ::DeleteObject(bgBrush_); bgBrush_ = nullptr; }
+    if (editBrush_) { ::DeleteObject(editBrush_); editBrush_ = nullptr; }
+    if (comboBrush_) { ::DeleteObject(comboBrush_); comboBrush_ = nullptr; }
+}
 // Сохранение темы в реестр
 void MainWindow::SaveThemeSetting(bool darkMode) {
     HKEY hKey;
@@ -648,26 +788,71 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         break;
-
+        
+    case WM_CTLCOLORBTN: {
+        HDC dc = reinterpret_cast<HDC>(wParam);
+        if (isDarkTheme_) {
+            ::SetBkColor(dc, RGB(32, 32, 32));
+            return reinterpret_cast<LRESULT>(::GetStockObject(DC_BRUSH));
+        }
+        break;
+    }
+    case WM_CTLCOLOREDIT: {
+        HDC dc = reinterpret_cast<HDC>(wParam);
+        
+        if (isDarkTheme_) {
+            // Темная тема для полей ввода
+            ::SetBkColor(dc, RGB(45, 45, 45));
+            ::SetTextColor(dc, RGB(255, 255, 255));
+            static HBRUSH editBrush = ::CreateSolidBrush(RGB(45, 45, 45));
+            return reinterpret_cast<LRESULT>(editBrush);
+        }
+        break;
+    }
+    case WM_CTLCOLORLISTBOX: {
+        HDC dc = reinterpret_cast<HDC>(wParam);
+        
+        if (isDarkTheme_) {
+            // Темная тема для выпадающих списков
+            ::SetBkColor(dc, RGB(45, 45, 45));
+            ::SetTextColor(dc, RGB(240, 240, 240));
+            static HBRUSH comboBrush = ::CreateSolidBrush(RGB(45, 45, 45));
+            return reinterpret_cast<LRESULT>(comboBrush);
+        }
+        break;
+    }
     case WM_CTLCOLORSTATIC: {
         HWND control = reinterpret_cast<HWND>(lParam);
         HDC dc = reinterpret_cast<HDC>(wParam);
         
-        if (control == ledStatus_) {
-            // LED статус как было
-            const bool connected = serialPort_.IsOpen();
-            ::SetBkColor(dc, connected ? 
-                RGB(50, 160, 70) : RGB(200, 50, 50));
-            ::SetTextColor(dc, RGB(255, 255, 255));
-            return reinterpret_cast<LRESULT>(connected ? 
-                ledBrushConnected_ : ledBrushDisconnected_);
-        }
-        
-        // Для статиков в темной теме
         if (isDarkTheme_) {
+            // Темная тема - темный фон, светлый текст
             ::SetBkColor(dc, RGB(32, 32, 32));
             ::SetTextColor(dc, RGB(240, 240, 240));
+            
+            // LED статус - особый цвет
+            if (control == ledStatus_) {
+                const bool connected = serialPort_.IsOpen();
+                ::SetBkColor(dc, connected ? RGB(40, 140, 60) : RGB(180, 40, 40));
+                ::SetTextColor(dc, RGB(255, 255, 255));
+                return reinterpret_cast<LRESULT>(connected ? 
+                    ledBrushConnected_ : ledBrushDisconnected_);
+            }
+            
+            // Для остальных статиков - прозрачный фон
             return reinterpret_cast<LRESULT>(::GetStockObject(DC_BRUSH));
+        } else {
+            // Светлая тема
+            if (control == ledStatus_) {
+                const bool connected = serialPort_.IsOpen();
+                ::SetBkColor(dc, connected ? RGB(50, 160, 70) : RGB(200, 50, 50));
+                ::SetTextColor(dc, RGB(255, 255, 255));
+                return reinterpret_cast<LRESULT>(connected ? 
+                    ledBrushConnected_ : ledBrushDisconnected_);
+            }
+            
+            // По умолчанию - системные цвета
+            return reinterpret_cast<LRESULT>(::GetStockObject(WHITE_BRUSH));
         }
         break;
     }
