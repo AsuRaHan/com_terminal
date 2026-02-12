@@ -6,12 +6,6 @@ namespace ui {
 
 WindowLayout::WindowLayout(MainWindow& owner) : owner_(owner) {}
 
-
-
-
-
-
-
 void WindowLayout::ResizeChildren() const {
     RECT client{};
     ::GetClientRect(owner_.window_, &client);
@@ -114,8 +108,8 @@ void WindowLayout::ResizeChildren() const {
     ::MoveWindow(owner_.comboBaud_, x, y, COMBO_BAUD_WIDTH, COMBO_DROP_HEIGHT, TRUE);
     x += COMBO_BAUD_WIDTH + GAP;
     
-    ::MoveWindow(owner_.buttonOpen_, x, y, BTN_OPEN_WIDTH, ROW_HEIGHT*2, TRUE);
-    ::MoveWindow(owner_.buttonClose_, x, y, BTN_CLOSE_WIDTH, ROW_HEIGHT*2, TRUE);
+    ::MoveWindow(owner_.buttonOpen_, x, y+3, BTN_OPEN_WIDTH, ROW_HEIGHT*2, TRUE);
+    ::MoveWindow(owner_.buttonClose_, x, y+3, BTN_CLOSE_WIDTH, ROW_HEIGHT*2, TRUE);
     
     // Ряд 2: Data Bits, Parity, Stop Bits, Flow Control, RTS, DTR
     x = group1Rect.left + GROUP_PADDING;
@@ -133,10 +127,10 @@ void WindowLayout::ResizeChildren() const {
     ::MoveWindow(owner_.comboFlow_, x, y, COMBO_FLOW_WIDTH, COMBO_DROP_HEIGHT, TRUE);
     x += COMBO_FLOW_WIDTH + GAP;
     
-    ::MoveWindow(owner_.checkRts_, x, y + 3, CHECK_RTS_WIDTH, ROW_HEIGHT, TRUE);
+    ::MoveWindow(owner_.checkRts_, x, y+1, CHECK_RTS_WIDTH, ROW_HEIGHT-5, TRUE);
     x += CHECK_RTS_WIDTH + GAP;
     
-    ::MoveWindow(owner_.checkDtr_, x, y + 3, CHECK_DTR_WIDTH, ROW_HEIGHT, TRUE);
+    ::MoveWindow(owner_.checkDtr_, x, y+1, CHECK_DTR_WIDTH, ROW_HEIGHT-5, TRUE);
 
     // ============ ГРУППА 2: Statistics ============
     // RECT group2Rect = {
@@ -203,16 +197,16 @@ void WindowLayout::ResizeChildren() const {
     x = group4Rect.left + GROUP_PADDING;
     y = group4Rect.top + GROUP_PADDING + 8;
     
-    ::MoveWindow(owner_.ledStatus_, x, y, LED_STATUS_WIDTH, ROW_HEIGHT, TRUE);
+    ::MoveWindow(owner_.ledStatus_, x, y+4, LED_STATUS_WIDTH, ROW_HEIGHT-8, TRUE);
     x += LED_STATUS_WIDTH + GAP;
     
     ::MoveWindow(owner_.comboRxMode_, x, y, COMBO_RXMODE_WIDTH, COMBO_DROP_HEIGHT, TRUE);
     x += COMBO_RXMODE_WIDTH + GAP;
     
-    ::MoveWindow(owner_.checkSaveLog_, x, y + 3, CHECK_SAVELOG_WIDTH, ROW_HEIGHT, TRUE);
+    ::MoveWindow(owner_.checkSaveLog_, x, y+4, CHECK_SAVELOG_WIDTH, ROW_HEIGHT-8, TRUE);
     x += CHECK_SAVELOG_WIDTH + GAP;
     
-    ::MoveWindow(owner_.buttonClear_, x, y, BTN_CLEAR_WIDTH, ROW_HEIGHT, TRUE);
+    ::MoveWindow(owner_.buttonClear_, x, y-2, BTN_CLEAR_WIDTH, ROW_HEIGHT, TRUE);
 
     // ============ ГРУППА 5: Send Data ============
     int sendTop = group4Rect.bottom + GAP;
@@ -241,13 +235,6 @@ void WindowLayout::ResizeChildren() const {
                  BTN_SEND_WIDTH,
                  group5Rect.bottom - y - GROUP_PADDING, TRUE);
 }
-
-
-
-
-
-
-
 
 void WindowLayout::ApplyMinTrackSize(MINMAXINFO* minMaxInfo) {
     if (minMaxInfo == nullptr) {

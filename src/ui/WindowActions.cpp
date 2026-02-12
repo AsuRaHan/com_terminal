@@ -96,7 +96,6 @@ void WindowActions::ClosePort() {
     }
 }
 
-
 void WindowActions::SendInputData() {
     if (!owner_.serialPort_.IsOpen()) {
         owner_.AppendLog(LogKind::Error, L"Port is not open");
@@ -205,8 +204,6 @@ void WindowActions::SendInputData() {
         owner_.AppendLog(LogKind::Error, L"Write failed");
     }
 }
-
-
 
 void WindowActions::HandleSerialData(const std::vector<uint8_t>& bytes) {
     owner_.rxBytes_ += static_cast<std::uint64_t>(bytes.size());
@@ -360,6 +357,5 @@ std::wstring WindowActions::FormatIncoming(const std::vector<uint8_t>& bytes) co
     // HEX режим
     return MainWindow::BytesToHex(bytes);
 }
-
 
 } // namespace ui

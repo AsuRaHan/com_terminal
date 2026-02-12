@@ -20,9 +20,7 @@ public:
     // Новые методы для работы с подсказками
     void CreateTooltips();
     void AddTooltip(HWND control, const std::wstring& text, const std::wstring& title = L"");
-    // void UpdateTooltips(); // Для локализации/обновления
     void AddAllTooltips(); // Добавляет подсказки для всех элементов управления
-    // void ApplyThemes(); // Применяет темы ко всем контролам
 private:
     MainWindow& owner_;
     

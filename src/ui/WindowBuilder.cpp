@@ -1,8 +1,5 @@
 #include "ui/WindowBuilder.h"
 
-#include <uxtheme.h>
-// #pragma comment(lib, "uxtheme.lib")
-
 namespace ui {
 
 WindowBuilder::WindowBuilder(MainWindow& owner) : owner_(owner) {}
@@ -65,25 +62,27 @@ void WindowBuilder::CreateTooltips() {
 void WindowBuilder::AddTooltip(HWND control, const std::wstring& text, const std::wstring& title) {
     if (!owner_.tooltip_ || !control || !::IsWindow(control)) return;
 
+    // Формируем полный текст
+    std::wstring fullText;
+    if (!title.empty()) {
+        fullText = title + L"\n" + text;
+    } else {
+        fullText = text;
+    }
+
     TOOLINFOW ti{};
     ti.cbSize = sizeof(TOOLINFOW);
+    ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND;
+    ti.hwnd = owner_.window_;
+    ti.uId = reinterpret_cast<UINT_PTR>(control);
     
-    // ВАЖНО: Правильная комбинация флагов
-    ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND;  // TTF_TRANSPARENT нахуй не нужен
-    ti.hwnd = owner_.window_;  // Родительское окно
-    ti.uId = reinterpret_cast<UINT_PTR>(control);  // HWND как ID
-    ti.lpszText = const_cast<LPWSTR>(text.c_str());
+    // ВАЖНО: храним строку где-то, чтобы не умерла
+    static std::unordered_map<HWND, std::wstring> tooltipTexts;
+    tooltipTexts[control] = fullText;
+    ti.lpszText = const_cast<LPWSTR>(tooltipTexts[control].c_str());
     
-    // ВАЖНО: Сначала добавляем тултип
     ::SendMessage(owner_.tooltip_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
-    
-    // ВАЖНО: Потом устанавливаем заголовок (отдельным сообщением)
-    if (!title.empty()) {
-        ::SendMessage(owner_.tooltip_, TTM_SETTITLE, 0, reinterpret_cast<LPARAM>(title.c_str()));
-    }
 }
-
-
 
 void WindowBuilder::AddAllTooltips() {    
     // ============ Port Settings ============
@@ -132,21 +131,21 @@ void WindowBuilder::AddAllTooltips() {
         L"DTR");
 
     // ============ Statistics ============
-    AddTooltip(owner_.textTxTotal_,
-        L"Total bytes transmitted",
-        L"TX Total");
+    // AddTooltip(owner_.textTxTotal_,
+    //     L"Total bytes transmitted",
+    //     L"TX Total");
 
-    AddTooltip(owner_.textRxTotal_,
-        L"Total bytes received",
-        L"RX Total");
+    // AddTooltip(owner_.textRxTotal_,
+    //     L"Total bytes received",
+    //     L"RX Total");
 
-    AddTooltip(owner_.textTxRate_,
-        L"Current transmit speed",
-        L"TX Rate");
+    // AddTooltip(owner_.textTxRate_,
+    //     L"Current transmit speed",
+    //     L"TX Rate");
 
-    AddTooltip(owner_.textRxRate_,
-        L"Current receive speed",
-        L"RX Rate");
+    // AddTooltip(owner_.textRxRate_,
+    //     L"Current receive speed",
+    //     L"RX Rate");
 
     // ============ Terminal Log ============
     AddTooltip(owner_.richLog_,
@@ -200,9 +199,6 @@ void WindowBuilder::AddAllTooltips() {
         L"Send data to device",
         L"Send Data");
 }
-
-
-
 
 void WindowBuilder::CreateControls() {
     // ============ СНАЧАЛА СОЗДАЕМ ГРУППЫ ============
@@ -516,7 +512,6 @@ void WindowBuilder::CreateControls() {
         owner_.instance_,
         nullptr);
 
-    // ApplyThemes();
     // ============ Установка шрифта для лога ============
     CHARFORMAT2W format{};
     format.cbSize = sizeof(format);
@@ -529,10 +524,6 @@ void WindowBuilder::CreateControls() {
     // ============ СОЗДАЕМ ПОДСКАЗКИ ============
     CreateTooltips();
 }
-
-
-
-
 
 void WindowBuilder::FillConnectionDefaults() {
     constexpr const wchar_t* dataBits[] = {L"5", L"6", L"7", L"8"};
@@ -569,62 +560,5 @@ void WindowBuilder::FillConnectionDefaults() {
     ::SendMessage(owner_.checkDtr_, BM_SETCHECK, BST_UNCHECKED, 0);
     ::SendMessage(owner_.checkSaveLog_, BM_SETCHECK, BST_UNCHECKED, 0);
 }
-
-// void WindowBuilder::ApplyThemes() {
-//     // Применяем тему ко всем контролам
-//     HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
-//     if (hUxTheme) {
-//         typedef HRESULT (WINAPI *SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
-//         auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
-        
-//         if (pSetWindowTheme) {
-//             // Применяем Explorer тему ко всем контролам
-//             struct {
-//                 HWND* hwnd;
-//                 const wchar_t* name;
-//             } controls[] = {
-//                 {&owner_.groupPort_, L"Explorer"},
-//                 {&owner_.groupStats_, L"Explorer"},
-//                 {&owner_.groupLog_, L"Explorer"},
-//                 {&owner_.groupTerminalCtrl_, L"Explorer"},
-//                 {&owner_.groupSend_, L"Explorer"},
-//                 {&owner_.comboPort_, L"Explorer"},
-//                 {&owner_.comboBaud_, L"Explorer"},
-//                 {&owner_.buttonRefresh_, L"Explorer"},
-//                 {&owner_.buttonOpen_, L"Explorer"},
-//                 {&owner_.buttonClose_, L"Explorer"},
-//                 {&owner_.comboDataBits_, L"Explorer"},
-//                 {&owner_.comboParity_, L"Explorer"},
-//                 {&owner_.comboStopBits_, L"Explorer"},
-//                 {&owner_.comboFlow_, L"Explorer"},
-//                 {&owner_.checkRts_, L"Explorer"},
-//                 {&owner_.checkDtr_, L"Explorer"},
-//                 {&owner_.textTxTotal_, L"Explorer"},
-//                 {&owner_.textRxTotal_, L"Explorer"},
-//                 {&owner_.textTxRate_, L"Explorer"},
-//                 {&owner_.textRxRate_, L"Explorer"},
-//                 {&owner_.ledStatus_, L"Explorer"},
-//                 {&owner_.comboRxMode_, L"Explorer"},
-//                 {&owner_.checkSaveLog_, L"Explorer"},
-//                 {&owner_.buttonClear_, L"Explorer"},
-//                 {&owner_.editSend_, L"Explorer"},
-//                 {&owner_.buttonSend_, L"Explorer"},
-//             };
-            
-//             for (const auto& ctrl : controls) {
-//                 if (*ctrl.hwnd) {
-//                     pSetWindowTheme(*ctrl.hwnd, ctrl.name, nullptr);
-//                 }
-//             }
-            
-//             // RichEdit - особая тема
-//             if (owner_.richLog_) {
-//                 pSetWindowTheme(owner_.richLog_, L"Explorer", nullptr);
-//             }
-//         }
-        
-//         ::FreeLibrary(hUxTheme);
-//     }
-// }
 
 } // namespace ui

@@ -4,7 +4,6 @@
 #include "resource.h"
 // Иконки
 IDI_APP_ICON ICON "app.ico"
-// IDB_TOOLBAR BITMAP "toolbar.bmp"
 
 // Меню
 IDR_MAIN_MENU MENU
@@ -27,14 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
     END
-    // POPUP "&View"
-    // BEGIN
-    //     POPUP "Theme"
-    //     BEGIN
-    //         MENUITEM "&Light", IDM_VIEW_LIGHT_THEME, CHECKED
-    //         MENUITEM "&Dark", IDM_VIEW_DARK_THEME
-    //     END
-    // END
+
 END
 
 // Акселераторы (горячие клавиши)
@@ -46,7 +38,6 @@ BEGIN
     "S", IDC_BTN_SEND, VIRTKEY, CONTROL
     "L", IDC_BTN_CLEAR, VIRTKEY, CONTROL
     "A", IDM_EDIT_SELECTALL, VIRTKEY, CONTROL
-    // VK_F1, IDM_HELP_ABOUT, VIRTKEY
 END
 
 // Версия

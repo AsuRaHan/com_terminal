@@ -1,12 +1,11 @@
 #include <windows.h>
-// #include <commctrl.h>
 
 #include "resource.h"
 #include "ui/MainWindow.h"
 
 namespace {
 
-void EnableDpiAwareness() {
+bool EnableDpiAwareness() {
     using SetProcessDpiAwarenessContextFn = BOOL(WINAPI*)(DPI_AWARENESS_CONTEXT);
 
     const HMODULE user32 = ::GetModuleHandle(L"user32.dll");
@@ -15,36 +14,35 @@ void EnableDpiAwareness() {
             ::GetProcAddress(user32, "SetProcessDpiAwarenessContext"));
         if (setContext != nullptr) {
             if (setContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
-                return;
+                return true;
             }
         }
     }
 
-    ::SetProcessDPIAware();
+    // Fallback to legacy DPI awareness
+    if (::SetProcessDPIAware()) {
+        return true;
+    }
+    return false;
 }
-
-// bool InitCommonControlsWrapper() {
-//     INITCOMMONCONTROLSEX icc{};
-//     icc.dwSize = sizeof(icc);
-//     icc.dwICC = ICC_STANDARD_CLASSES | ICC_BAR_CLASSES | ICC_TAB_CLASSES;
-//     const BOOL result = ::InitCommonControlsEx(&icc);
-//     (void)result;
-//     return true;
-// }
 
 } // namespace
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow) {
-    EnableDpiAwareness();
-    ::LoadLibraryW(L"Msftedit.dll");
+    if (!EnableDpiAwareness()) {
+        ::MessageBox(nullptr, L"Failed to enable DPI awareness.", L"Error", MB_ICONERROR);
+        return 1;
+    }
 
-    // if (!InitCommonControlsWrapper()) {
-    //     return 1;
-    // }
+    HMODULE hMsftedit = ::LoadLibrary(L"Msftedit.dll"); // Загружаем библиотеку для RichEdit 4.1
+    if (hMsftedit == nullptr) {
+        ::MessageBox(nullptr, L"Failed to load Msftedit.dll.", L"Error", MB_ICONERROR);
+        return 2;
+    }
 
     ui::MainWindow mainWindow(hInstance);
     if (!mainWindow.Create(nCmdShow)) {
-        return 2;
+        return 3;
     }
 
     const HACCEL accelerators = ::LoadAccelerators(hInstance, MAKEINTRESOURCEW(IDR_MAIN_ACCEL));

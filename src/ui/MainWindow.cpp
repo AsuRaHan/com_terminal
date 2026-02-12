@@ -58,17 +58,17 @@ MainWindow::MainWindow(HINSTANCE instance):
     checkDtr_(nullptr),
     comboRxMode_(nullptr),
     checkSaveLog_(nullptr),
-    textTxTotal_(nullptr),
-    textRxTotal_(nullptr),
-    textTxRate_(nullptr),
-    textRxRate_(nullptr),
+    // textTxTotal_(nullptr),
+    // textRxTotal_(nullptr),
+    // textTxRate_(nullptr),
+    // textRxRate_(nullptr),
     ledBrushDisconnected_(::CreateSolidBrush(RGB(200, 50, 50))),
     ledBrushConnected_(::CreateSolidBrush(RGB(50, 160, 70))),
     deviceNotify_(nullptr),
     serialPort_(),
     logVirtualizer_(2000, 5000, 5U * 1024U * 1024U),
     rebuildingRichEdit_(false),
-    isDarkTheme_(false),
+    // isDarkTheme_(false),
     txBytes_(0),
     rxBytes_(0),
     tooltip_(nullptr),
@@ -76,25 +76,11 @@ MainWindow::MainWindow(HINSTANCE instance):
     layout_(std::make_unique<WindowLayout>(*this)),
     actions_(std::make_unique<WindowActions>(*this)) {
 
-        // INITCOMMONCONTROLSEX icc = {};
-        // icc.dwSize = sizeof(icc);
-        // icc.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS;
-        // ::InitCommonControlsEx(&icc);
-        // ЯВНО активируем визуальные стили
-        // ::SetWindowTheme(::GetDesktopWindow(), L" ", L" "); // Хак для активации визуальных стилей для всех контролов в приложении
-
-        // LoadThemeSetting(); // Загружаем сохраненную тему при запуске
 }
 
 MainWindow::~MainWindow() {
     actions_->ClosePort();
     if (deviceNotify_) ::UnregisterDeviceNotification(deviceNotify_);
-    
-    // Удаляем кисти
-    // DestroyThemeBrushes();
-    
-    // if (ledBrushConnected_) { ::DeleteObject(ledBrushConnected_); ledBrushConnected_ = nullptr; }
-    // if (ledBrushDisconnected_) { ::DeleteObject(ledBrushDisconnected_); ledBrushDisconnected_ = nullptr; }
 }
 
 bool MainWindow::Create(int nCmdShow) {
@@ -156,7 +142,7 @@ void MainWindow::AppendLog(LogKind kind, const std::wstring& text) {
         return;
     }
 
-    const COLORREF color = ColorForLogKindWithTheme(kind);
+    const COLORREF color = ColorForLogKind(kind);
     
     // Разбиваем текст на строки и добавляем каждую отдельно
     std::wstring line = L"[" + BuildTimestamp() + L"] " + text;
@@ -342,236 +328,6 @@ void MainWindow::SaveLogToFile() {
     }
 }
 
-
-// void MainWindow::ApplyTheme(bool darkMode) {
-//     isDarkTheme_ = darkMode;
-    
-//     // 1. Создаем кисти
-//     CreateThemeBrushes(darkMode);
-    
-//     // 2. Темный заголовок
-//     if (::IsWindows10OrGreater()) {
-//         BOOL useDarkMode = darkMode ? TRUE : FALSE;
-//         ::DwmSetWindowAttribute(window_, DWMWA_USE_IMMERSIVE_DARK_MODE,
-//             &useDarkMode, sizeof(useDarkMode));
-//     }
-    
-//     // 3. Фон окна
-//     ::SetClassLongPtr(window_, GCLP_HBRBACKGROUND, reinterpret_cast<LONG_PTR>(bgBrush_));
-
-//     // 4. Применяем визуальные стили ко ВСЕМ контролам
-//     ApplyThemesToAllControls();
-    
-//     // 5. Спец обработка RichEdit
-//     if (richLog_) {
-//         // Жесткий сброс темы
-//         ::SetWindowTheme(richLog_, L"", L"");
-//         ::SetWindowTheme(richLog_, L"Explorer", nullptr);
-        
-//         CHARFORMAT2W cf = {sizeof(cf)};
-//         cf.dwMask = CFM_COLOR | CFM_BACKCOLOR;
-//         cf.crTextColor = darkMode ? RGB(240,240,240) : RGB(0,0,0);
-//         cf.crBackColor = darkMode ? RGB(32,32,32) : RGB(255,255,255);
-//         ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
-//     }
-    
-//     // 6. Обновляем LED
-//     if (ledStatus_) {
-//         ::SetWindowTextW(ledStatus_, serialPort_.IsOpen() ? L"Connected" : L"Disconnected");
-//         ::InvalidateRect(ledStatus_, NULL, TRUE);
-//     }
-    
-//     // 7. Перерисовываем ВСЁ
-//     ::RedrawWindow(window_, NULL, NULL, 
-//         RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
-    
-//     // 8. Меню
-//     UpdateThemeMenu();
-//     SaveThemeSetting(darkMode);
-// }
-
-
-// void MainWindow::ApplyThemesToAllControls() {
-//     HMODULE hUxTheme = ::LoadLibrary(L"uxtheme.dll");
-//     if (!hUxTheme) return;
-    
-//     typedef HRESULT(WINAPI* SetWindowThemeFn)(HWND, LPCWSTR, LPCWSTR);
-//     auto pSetWindowTheme = (SetWindowThemeFn)::GetProcAddress(hUxTheme, "SetWindowTheme");
-    
-//     if (pSetWindowTheme) {
-//         ::EnumChildWindows(window_, [](HWND hwnd, LPARAM lParam) -> BOOL {
-//             auto pSetWindowTheme = (SetWindowThemeFn)lParam;
-            
-//             // Сначала сбрасываем
-//             pSetWindowTheme(hwnd, L"", L"");
-            
-//             // Применяем Explorer
-//             pSetWindowTheme(hwnd, L"Explorer", nullptr);
-            
-//             // Для RichEdit особая тема
-//             wchar_t className[64];
-//             ::GetClassNameW(hwnd, className, 64);
-//             if (wcscmp(className, L"RichEdit20W") == 0 || 
-//                 wcscmp(className, MSFTEDIT_CLASS) == 0) {
-//                 pSetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
-//             }
-            
-//             return TRUE;
-//         }, reinterpret_cast<LPARAM>(pSetWindowTheme));
-//     }
-    
-//     ::FreeLibrary(hUxTheme);
-// }
-
-
-
-
-// void MainWindow::ReapplyLogColors() {
-//     if (!richLog_) return;
-    
-//     // Сохраняем позицию
-//     POINT scrollPos{};
-//     ::SendMessage(richLog_, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
-    
-//     CHARRANGE selection{};
-//     ::SendMessage(richLog_, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
-    
-//     // Переустанавливаем форматирование для всего текста
-//     CHARFORMAT2W format{};
-//     format.cbSize = sizeof(format);
-//     format.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
-//     format.crTextColor = isDarkTheme_ ? RGB(240, 240, 240) : RGB(0, 0, 0);
-//     format.yHeight = 180;
-//     ::StringCchCopy(format.szFaceName, LF_FACESIZE, L"Consolas");
-    
-//     ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&format));
-    
-//     // Восстанавливаем позицию
-//     ::SendMessage(richLog_, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&scrollPos));
-//     ::SendMessage(richLog_, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
-// }
-
-
-// void MainWindow::CreateThemeBrushes(bool darkMode) {
-//     // Сначала удаляем старые
-//     DestroyThemeBrushes();
-    
-//     if (darkMode) {
-//         bgBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
-//         editBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
-//         comboBrush_ = ::CreateSolidBrush(RGB(45, 45, 45));
-//         groupBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
-//         staticBrush_ = ::CreateSolidBrush(RGB(32, 32, 32));
-//         ledBrushConnected_ = ::CreateSolidBrush(RGB(40, 140, 60));
-//         ledBrushDisconnected_ = ::CreateSolidBrush(RGB(180, 40, 40));
-//     } else {
-//         bgBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
-//         editBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
-//         comboBrush_ = ::CreateSolidBrush(RGB(255, 255, 255));
-//         groupBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
-//         staticBrush_ = ::CreateSolidBrush(RGB(240, 240, 240));
-//         ledBrushConnected_ = ::CreateSolidBrush(RGB(50, 160, 70));
-//         ledBrushDisconnected_ = ::CreateSolidBrush(RGB(200, 50, 50));
-//     }
-// }
-
-// void MainWindow::DestroyThemeBrushes() {
-//     if (bgBrush_) { ::DeleteObject(bgBrush_); bgBrush_ = nullptr; }
-//     if (editBrush_) { ::DeleteObject(editBrush_); editBrush_ = nullptr; }
-//     if (comboBrush_) { ::DeleteObject(comboBrush_); comboBrush_ = nullptr; }
-//     if (groupBrush_) { ::DeleteObject(groupBrush_); groupBrush_ = nullptr; }
-//     if (staticBrush_) { ::DeleteObject(staticBrush_); staticBrush_ = nullptr; }
-// }
-
-// Сохранение темы в реестр
-// void MainWindow::SaveThemeSetting(bool darkMode) {
-//     HKEY hKey;
-//     if (::RegCreateKeyExW(HKEY_CURRENT_USER, 
-//         L"Software\\COMTerminal", 0, nullptr, 
-//         REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
-//         DWORD value = darkMode ? 1 : 0;
-//         ::RegSetValueExW(hKey, L"Theme", 0, REG_DWORD, 
-//             reinterpret_cast<const BYTE*>(&value), sizeof(value));
-//         ::RegCloseKey(hKey);
-//     }
-// }
-
-// Загрузка темы (вызвать в WM_CREATE)
-// void MainWindow::LoadThemeSetting() {
-//     HKEY hKey;
-//     DWORD darkMode = 0;
-//     DWORD size = sizeof(darkMode);
-//     DWORD type = REG_DWORD;
-    
-//     if (::RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\COMTerminal", 
-//         0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-//         if (::RegQueryValueExW(hKey, L"Theme", nullptr, &type, 
-//             reinterpret_cast<LPBYTE>(&darkMode), &size) == ERROR_SUCCESS) {
-//             isDarkTheme_ = (darkMode == 1);
-//         }
-//         ::RegCloseKey(hKey);
-//     }
-    
-//     // Применяем тему при загрузке
-//     ApplyTheme(isDarkTheme_);
-// }
-
-// void MainWindow::UpdateThemeMenu() {
-//     HMENU menu = ::GetMenu(window_);
-//     if (!menu) return;
-    
-//     // Находим View меню
-//     int viewMenuPos = -1;
-//     int menuCount = ::GetMenuItemCount(menu);
-//     for (int i = 0; i < menuCount; i++) {
-//         wchar_t buffer[64];
-//         MENUITEMINFOW mii = { sizeof(mii) };
-//         mii.fMask = MIIM_STRING;
-//         mii.dwTypeData = buffer;
-//         mii.cch = 64;
-//         if (::GetMenuItemInfoW(menu, i, TRUE, &mii)) {
-//             if (wcscmp(buffer, L"&View") == 0) {
-//                 viewMenuPos = i;
-//                 break;
-//             }
-//         }
-//     }
-    
-//     if (viewMenuPos == -1) return;
-    
-//     HMENU viewMenu = ::GetSubMenu(menu, viewMenuPos);
-//     if (!viewMenu) return;
-    
-//     // Ищем подменю Theme
-//     int themeSubMenuPos = -1;
-//     int viewMenuItemCount = ::GetMenuItemCount(viewMenu);
-//     for (int i = 0; i < viewMenuItemCount; i++) {
-//         wchar_t buffer[64];
-//         MENUITEMINFOW mii = { sizeof(mii) };
-//         mii.fMask = MIIM_STRING | MIIM_SUBMENU;
-//         mii.dwTypeData = buffer;
-//         mii.cch = 64;
-//         if (::GetMenuItemInfoW(viewMenu, i, TRUE, &mii)) {
-//             if (wcscmp(buffer, L"Theme") == 0) {
-//                 themeSubMenuPos = i;
-//                 break;
-//             }
-//         }
-//     }
-    
-//     if (themeSubMenuPos == -1) return;
-    
-//     HMENU themeMenu = ::GetSubMenu(viewMenu, themeSubMenuPos);
-//     if (!themeMenu) return;
-    
-//     ::CheckMenuItem(themeMenu, IDM_VIEW_LIGHT_THEME, 
-//         MF_BYCOMMAND | (isDarkTheme_ ? MF_UNCHECKED : MF_CHECKED));
-//     ::CheckMenuItem(themeMenu, IDM_VIEW_DARK_THEME, 
-//         MF_BYCOMMAND | (isDarkTheme_ ? MF_CHECKED : MF_UNCHECKED));
-// }
-
-
-
 std::wstring MainWindow::BuildTimestamp() {
     SYSTEMTIME st{};
     ::GetLocalTime(&st);
@@ -617,25 +373,6 @@ COLORREF MainWindow::ColorForLogKind(LogKind kind) noexcept {
         return RGB(180, 40, 40);
     }
     return RGB(120, 120, 120);
-}
-
-// НЕ СТАТИЧЕСКИЙ метод для цветов с учетом темы
-COLORREF MainWindow::ColorForLogKindWithTheme(LogKind kind) {
-    if (isDarkTheme_) {
-        switch (kind) {
-        case LogKind::Rx:
-            return RGB(100, 255, 100);
-        case LogKind::Tx:
-            return RGB(100, 180, 255);
-        case LogKind::System:
-            return RGB(200, 200, 200);
-        case LogKind::Error:
-            return RGB(255, 100, 100);
-        }
-        return RGB(200, 200, 200);
-    } else {
-        return ColorForLogKind(kind); // Вызываем статический
-    }
 }
 
 LRESULT CALLBACK MainWindow::WndProcSetup(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
