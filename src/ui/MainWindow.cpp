@@ -70,6 +70,7 @@ MainWindow::MainWindow(HINSTANCE instance):
     rebuildingRichEdit_(false),
     txBytes_(0),
     rxBytes_(0),
+    tooltip_(nullptr),
     builder_(std::make_unique<WindowBuilder>(*this)),
     layout_(std::make_unique<WindowLayout>(*this)),
     actions_(std::make_unique<WindowActions>(*this)) 
@@ -251,6 +252,67 @@ void MainWindow::ClearTerminal() {
     UpdateStatusText();
 }
 
+void MainWindow::ShowLogContextMenu(int x, int y) {
+    HMENU menu = ::CreatePopupMenu();
+    
+    // Используем существующие ID из resource.h
+    ::InsertMenu(menu, 0, MF_BYPOSITION, IDM_EDIT_COPY, L"&Copy\tCtrl+C");
+    ::InsertMenu(menu, 1, MF_BYPOSITION, IDM_EDIT_SELECTALL, L"Select &All\tCtrl+A");
+    ::InsertMenu(menu, 2, MF_SEPARATOR, 0, nullptr);
+    ::InsertMenu(menu, 3, MF_BYPOSITION, IDC_BTN_CLEAR, L"&Clear Terminal\tCtrl+L");
+    ::InsertMenu(menu, 4, MF_SEPARATOR, 0, nullptr);
+    ::InsertMenu(menu, 5, MF_BYPOSITION, IDM_FILE_SAVEAS, L"&Save Log As...");
+    ::InsertMenu(menu, 6, MF_SEPARATOR, 0, nullptr);
+    // ::InsertMenu(menu, 7, MF_BYPOSITION, IDM_VIEW_RX, L"Show &RX", MF_CHECKED);
+    // ::InsertMenu(menu, 8, MF_BYPOSITION, IDM_VIEW_TX, L"Show &TX", MF_CHECKED);
+    // ::InsertMenu(menu, 9, MF_BYPOSITION, IDM_VIEW_SYSTEM, L"Show &System", MF_CHECKED);
+    
+    ::TrackPopupMenu(menu, TPM_RIGHTBUTTON, x, y, 0, window_, nullptr);
+    ::DestroyMenu(menu);
+}
+
+void MainWindow::CopySelectedText() {
+    if (richLog_ == nullptr) return;
+    ::SendMessage(richLog_, WM_COPY, 0, 0);
+}
+
+void MainWindow::SelectAllText() {
+    if (richLog_ == nullptr) return;
+    ::SendMessage(richLog_, EM_SETSEL, 0, -1);
+}
+
+void MainWindow::SaveLogToFile() {
+    wchar_t filename[MAX_PATH] = {};
+    OPENFILENAMEW ofn = {};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = window_;
+    ofn.lpstrFilter = L"Log Files (*.log)\0*.log\0Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrDefExt = L"log";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    
+    if (::GetSaveFileNameW(&ofn)) {
+        // Сохраняем содержимое richEdit в файл
+        std::ofstream file(filename);
+        if (file.is_open()) {
+            int len = ::GetWindowTextLengthW(richLog_);
+            std::wstring text(len + 1, L'\0');
+            ::GetWindowTextW(richLog_, text.data(), len + 1);
+            
+            // Конвертируем в UTF-8
+            int utf8Len = ::WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, nullptr, 0, nullptr, nullptr);
+            std::string utf8(utf8Len, '\0');
+            ::WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, utf8.data(), utf8Len, nullptr, nullptr);
+            
+            file << utf8;
+            file.close();
+            
+            AppendLog(LogKind::System, L"Log saved to: " + std::wstring(filename));
+        }
+    }
+}
+
 std::wstring MainWindow::BuildTimestamp() {
     SYSTEMTIME st{};
     ::GetLocalTime(&st);
@@ -339,7 +401,11 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         AppendLog(LogKind::System, L"Application started");
         return 0;
     }
-
+    case WM_CONTEXTMENU:
+        if (reinterpret_cast<HWND>(wParam) == richLog_) {
+            ShowLogContextMenu(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        }
+        return 0;
     case WM_SIZE:
         layout_->ResizeChildren();
         return 0;
@@ -372,6 +438,18 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Call the member function directly; 'owner_' is not a valid identifier here.
             ClearTerminal();
             return 0;
+                case IDM_EDIT_COPY:
+        CopySelectedText();
+        return 0;
+        
+        case IDM_EDIT_SELECTALL:
+            SelectAllText();
+            return 0;
+            
+        case IDM_FILE_SAVEAS:
+            SaveLogToFile();
+            return 0;
+            
         default:
             break;
         }

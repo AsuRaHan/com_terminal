@@ -63,7 +63,7 @@ private:
     HWND richLog_;
     HWND editSend_;
     HWND buttonSend_;
-    HWND buttonClear_; // New button to clear terminal output
+    HWND buttonClear_;
     HWND ledStatus_;
     HWND comboDataBits_;
     HWND comboParity_;
@@ -104,6 +104,10 @@ private:
     // Toggles visibility of the Open/Close buttons depending on connection status.
     void UpdateConnectionButtons();
     void ClearTerminal(); // Clears the rich edit log and resets counters
+    void ShowLogContextMenu(int x, int y); // Shows context menu for log actions (copy, clear, save)
+    void CopySelectedText(); // Copies selected text from rich edit to clipboard
+    void SelectAllText(); // Selects all text in the rich edit control
+    void SaveLogToFile(); // Opens Save File dialog and saves log content to a file
 };
 
 } // namespace ui
