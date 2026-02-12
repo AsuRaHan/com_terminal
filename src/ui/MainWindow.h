@@ -74,6 +74,16 @@ private:
     HWND comboRxMode_;
     HWND checkSaveLog_;
 
+    HWND groupPort_;
+    HWND groupStats_;
+    HWND groupTerminalCtrl_;
+    HWND groupLog_;
+    HWND groupSend_;
+
+    HWND textTxTotal_;
+    HWND textRxTotal_;
+    HWND textTxRate_;
+    HWND textRxRate_;
     // Handle for tooltip window used to provide user hints
     HWND tooltip_; // Added for UI hint support
 
