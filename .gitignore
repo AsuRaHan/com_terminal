@@ -8,7 +8,7 @@ build/
 *.lib
 *.log
 *.tmp
-
+build_vs.bat
 # Логи приложения
 logs/
 

@@ -12,6 +12,9 @@ BEGIN
     IDS_PORT_CLOSED "Port closed"
     IDS_STATUS_DISCONNECTED "Disconnected"
     IDS_STATUS_TXRX "TX: 0  RX: 0"
+    IDS_PORT_NOT_OPEN "Port not open"
+    IDS_NO_DATA_TO_SEND "No data to send"
+    IDS_WRITE_FAILED "Write failed"
     IDS_STATUS_READY "Ready"
     // Tooltips
     IDS_TIP_COMBO_PORT "Select COM port. Click Refresh to update list."
@@ -47,4 +50,9 @@ BEGIN
     IDS_BTN_SEND_TEXT "Send"
     IDS_RM_TEXT "Text"
     IDS_RM_HEX "HEX"
+    IDS_PORT_OPENED "Opened %s @ %d"
+    IDS_STATUS_CONNECTED "Connected"
+    // Prefixes for log entries
+    IDS_TX_PREFIX "TX:"
+    IDS_RX_PREFIX "RX:"
 END

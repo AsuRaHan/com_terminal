@@ -412,7 +412,7 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // Show the appropriate button based on initial connection state
         UpdateConnectionButtons();
         actions_->RefreshPorts();
-        AppendLog(LogKind::System, L"Application started");
+        // AppendLog(LogKind::System, L"Application started");
         return 0;
     }
     case WM_CONTEXTMENU:

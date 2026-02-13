@@ -6,6 +6,13 @@ namespace {
 constexpr UINT WM_APP_SERIAL_DATA = WM_APP + 1;
 } // namespace
 
+// Helper to load a string resource into std::wstring
+inline std::wstring LoadStringFromRes(HINSTANCE hInst, UINT id) {
+    wchar_t buf[256];
+    int len = ::LoadString(hInst, id, buf, _countof(buf));
+    return std::wstring(buf, static_cast<std::size_t>(len));
+}
+
 WindowActions::WindowActions(MainWindow& owner) : owner_(owner) {}
 
 void WindowActions::RefreshPorts() {
@@ -29,10 +36,12 @@ void WindowActions::RefreshPorts() {
 
     if (selectedIndex >= 0) {
         ::SendMessage(owner_.comboPort_, CB_SETCURSEL, static_cast<WPARAM>(selectedIndex), 0);
-        const std::wstring msg = L"Port list refreshed: " + std::to_wstring(ports.size()) + L" found";
-        owner_.AppendLog(LogKind::System, msg);
+        const std::wstring fmt = LoadStringFromRes(owner_.instance_, IDS_PORT_LIST_REFRESHED);
+        wchar_t buffer[256];
+        wsprintfW(buffer, fmt.c_str(), static_cast<int>(ports.size()));
+        owner_.AppendLog(LogKind::System, std::wstring(buffer));
     } else {
-        owner_.AppendLog(LogKind::System, L"Port list refreshed: no ports found");
+        owner_.AppendLog(LogKind::System, LoadStringFromRes(owner_.instance_, IDS_NO_PORTS_FOUND));
     }
 }
 
@@ -43,7 +52,7 @@ bool WindowActions::OpenSelectedPort() {
 
     const int selected = static_cast<int>(::SendMessage(owner_.comboPort_, CB_GETCURSEL, 0, 0));
     if (selected < 0) {
-        owner_.AppendLog(LogKind::Error, L"No COM port selected");
+        owner_.AppendLog(LogKind::Error, LoadStringFromRes(owner_.instance_, IDS_NO_COM_PORT));
         return false;
     }
 
@@ -56,7 +65,7 @@ bool WindowActions::OpenSelectedPort() {
     bool settingsOk = false;
     const serial::PortSettings settings = BuildPortSettingsFromUi(&settingsOk);
     if (!settingsOk) {
-        owner_.AppendLog(LogKind::Error, L"Invalid serial settings");
+        owner_.AppendLog(LogKind::Error, LoadStringFromRes(owner_.instance_, IDS_INVALID_SERIAL));
         return false;
     }
 
@@ -68,7 +77,10 @@ bool WindowActions::OpenSelectedPort() {
     });
 
     if (!owner_.serialPort_.Open(portName, settings)) {
-        owner_.AppendLog(LogKind::Error, L"Failed to open " + portName);
+        const std::wstring fmt = LoadStringFromRes(owner_.instance_, IDS_FAILED_OPEN);
+        wchar_t buffer[256];
+        wsprintfW(buffer, fmt.c_str(), portName.c_str());
+        owner_.AppendLog(LogKind::Error, std::wstring(buffer));
         return false;
     }
 
@@ -76,9 +88,13 @@ bool WindowActions::OpenSelectedPort() {
     owner_.rxBytes_ = 0;
     owner_.UpdateStatusText();
 
-    ::SetWindowText(owner_.ledStatus_, L"Connected");
-    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Connected"));
-    owner_.AppendLog(LogKind::System, L"Opened " + portName + L" @ " + std::to_wstring(settings.baudRate));
+    const std::wstring connectedStr = LoadStringFromRes(owner_.instance_, IDS_STATUS_CONNECTED);
+    ::SetWindowText(owner_.ledStatus_, connectedStr.c_str());
+    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(connectedStr.c_str()));
+    const std::wstring fmt = LoadStringFromRes(owner_.instance_, IDS_PORT_OPENED);
+    wchar_t buffer[256];
+    wsprintfW(buffer, fmt.c_str(), portName.c_str(), static_cast<int>(settings.baudRate));
+    owner_.AppendLog(LogKind::System, std::wstring(buffer));
     // Update button visibility after successful connection
     owner_.UpdateConnectionButtons();
     return true;
@@ -88,9 +104,10 @@ void WindowActions::ClosePort() {
     owner_.serialPort_.SetDataCallback({});
     if (owner_.serialPort_.IsOpen()) {
         owner_.serialPort_.Close();
-        ::SetWindowText(owner_.ledStatus_, L"Disconnected");
-        ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
-        owner_.AppendLog(LogKind::System, L"Port closed");
+        const std::wstring disconnectedStr = LoadStringFromRes(owner_.instance_, IDS_STATUS_DISCONNECTED);
+        ::SetWindowText(owner_.ledStatus_, disconnectedStr.c_str());
+        ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(disconnectedStr.c_str()));
+        owner_.AppendLog(LogKind::System, LoadStringFromRes(owner_.instance_, IDS_PORT_CLOSED));
         // Update button visibility after closing
         owner_.UpdateConnectionButtons();
     }
@@ -98,7 +115,7 @@ void WindowActions::ClosePort() {
 
 void WindowActions::SendInputData() {
     if (!owner_.serialPort_.IsOpen()) {
-        owner_.AppendLog(LogKind::Error, L"Port is not open");
+        owner_.AppendLog(LogKind::Error, LoadStringFromRes(owner_.instance_, IDS_PORT_NOT_OPEN));
         return;
     }
 
@@ -182,7 +199,7 @@ void WindowActions::SendInputData() {
     }
 
     if (bytes.empty()) {
-        owner_.AppendLog(LogKind::Error, L"No data to send");
+        owner_.AppendLog(LogKind::Error, LoadStringFromRes(owner_.instance_, IDS_NO_DATA_TO_SEND));
         return;
     }
 
@@ -201,7 +218,7 @@ void WindowActions::SendInputData() {
             owner_.AppendLog(LogKind::Tx, L"TX: " + MainWindow::BytesToHex(bytes));
         }
     } else {
-        owner_.AppendLog(LogKind::Error, L"Write failed");
+        owner_.AppendLog(LogKind::Error, LoadStringFromRes(owner_.instance_, IDS_WRITE_FAILED));
     }
 }
 

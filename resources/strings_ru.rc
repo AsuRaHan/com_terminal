@@ -14,6 +14,12 @@ BEGIN
     IDS_STATUS_DISCONNECTED "Отключено"
     IDS_STATUS_TXRX "TX: 0  RX: 0"
     IDS_STATUS_READY "Готово"
+    IDS_STATUS_CONNECTED "Подключено"
+    IDS_PORT_NOT_OPEN "Порт не открыт"
+    IDS_NO_DATA_TO_SEND "Нет данных для отправки"
+    IDS_WRITE_FAILED "Запись не удалась"
+    IDS_TX_PREFIX "TX:"
+    IDS_RX_PREFIX "RX:"
     // Tooltips
     IDS_TIP_COMBO_PORT "Выберите COM порт. Нажмите Обновить, чтобы обновить список."
     IDS_TIP_COMBO_BAUD "Скорость передачи (9600, 19200, 38400, 57600, 115200 и т.д.)"
@@ -48,4 +54,5 @@ BEGIN
     IDS_BTN_SEND_TEXT "Отправить"
     IDS_RM_TEXT "Текст"
     IDS_RM_HEX "HEX"
+    IDS_PORT_OPENED "Открыт %s @ %d"
 END
