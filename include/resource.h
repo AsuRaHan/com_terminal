@@ -122,4 +122,15 @@
 #define IDC_GROUP_LOG 1097
 #define IDC_GROUP_SEND 1098
 
+// иконки в менюхах
+#define IDB_MENU_OPEN      2000
+#define IDB_MENU_CLOSE     2001
+#define IDB_MENU_REFRESH   2002
+#define IDB_MENU_SEND      2003
+#define IDB_MENU_CLEAR     2004
+#define IDB_MENU_SAVEAS    2005
+#define IDB_MENU_EXIT      2006
+#define IDB_MENU_COPY      2007
+#define IDB_MENU_SELECTALL 2008
+
 #endif // COMTERMINAL_RESOURCE_H

@@ -1,12 +1,14 @@
 #include "ui/MainWindow.h"
 
 #include <windowsx.h>
-#include <commctrl.h>
-#include <richedit.h>
-#include <strsafe.h>
+// #include <commctrl.h>
+// #include <richedit.h>
+// #include <strsafe.h>
 
 #include <algorithm>
-#include <sstream>
+#include <unordered_map>
+#include <string>
+// #include <sstream>
 
 #include "resource.h"
 #include "ui/WindowActions.h"
@@ -31,6 +33,42 @@ RECT CenteredRect(int width, int height) {
     RECT rect{x, y, x + width, y + height};
     return rect;
 }
+
+// Recursively search menu tree for item text by command id. Returns empty if not found.
+// std::wstring FindMenuItemTextByCommand(HWND hwnd, HMENU menu, UINT cmdId) {
+//     if (!menu) return {};
+//     int count = ::GetMenuItemCount(menu);
+//     for (int i = 0; i < count; ++i) {
+//         UINT id = ::GetMenuItemID(menu, i);
+//         if (id == cmdId) {
+//             wchar_t buf[512] = {};
+//             ::GetMenuStringW(menu, i, buf, _countof(buf), MF_BYPOSITION);
+//             return std::wstring(buf);
+//         }
+//         if (id == -1) { // submenu
+//             HMENU sub = ::GetSubMenu(menu, i);
+//             auto s = FindMenuItemTextByCommand(hwnd, sub, cmdId);
+//             if (!s.empty()) return s;
+//         }
+//     }
+//     return {};
+// }
+
+// Find the submenu and position of a command id. Returns pair(submenu, position) or (nullptr,-1) if not found.
+// std::pair<HMENU,int> FindMenuItemPosition(HMENU menu, UINT cmdId) {
+//     if (!menu) return {nullptr, -1};
+//     int count = ::GetMenuItemCount(menu);
+//     for (int i = 0; i < count; ++i) {
+//         UINT id = ::GetMenuItemID(menu, i);
+//         if (id == cmdId) return {menu, i};
+//         if (id == -1) {
+//             HMENU sub = ::GetSubMenu(menu, i);
+//             auto res = FindMenuItemPosition(sub, cmdId);
+//             if (res.first) return res;
+//         }
+//     }
+//     return {nullptr, -1};
+// }
 
 } // namespace
 
@@ -107,6 +145,50 @@ bool MainWindow::Create(int nCmdShow) {
     if (window_ == nullptr) {
         return false;
     }
+
+// HMENU hMainMenu = ::GetMenu(window_);
+// if (!hMainMenu) return true;  // или обработай ошибку
+
+    // MENUITEMINFO mii{};
+    // mii.cbSize = sizeof(mii);
+    // Set items as owner-draw and store our icon resource id in dwItemData.
+    // This makes the system send WM_MEASUREITEM/WM_DRAWITEM so we can draw icons.
+    // mii.fMask = MIIM_FTYPE | MIIM_DATA;
+    // mii.fType = MFT_OWNERDRAW;
+
+    // auto setOwnerDrawForCommand = [&](UINT cmdId, int iconResId) {
+    //     auto [parentMenu, pos] = FindMenuItemPosition(hMainMenu, cmdId);
+    //     if (!parentMenu || pos < 0) return;
+    //     MENUITEMINFO m = mii; // copy base
+    //     m.dwItemData = iconResId;
+    //     // When using position, set fMask and call by position
+    //     ::SetMenuItemInfo(parentMenu, pos, TRUE, &m);
+    // };
+
+    // -------------------------------------------------------------------------
+    // Все пункты меню, у которых есть иконки (по menus.rc)
+    // -------------------------------------------------------------------------
+
+    // setOwnerDrawForCommand(IDM_PORT_OPEN, IDB_MENU_OPEN);
+    // setOwnerDrawForCommand(IDM_PORT_CLOSE, IDB_MENU_CLOSE);
+    // setOwnerDrawForCommand(IDM_PORT_REFRESH, IDB_MENU_REFRESH);
+
+    // // Edit
+    // setOwnerDrawForCommand(IDM_EDIT_COPY, IDB_MENU_COPY);
+    // setOwnerDrawForCommand(IDM_EDIT_SELECTALL, IDB_MENU_SELECTALL);
+
+    // // File
+    // setOwnerDrawForCommand(IDM_FILE_EXIT, IDB_MENU_EXIT);
+
+    // // Опционально — если позже добавишь Send / Clear / Save As в меню (а не только в кнопки)
+    // setOwnerDrawForCommand(IDC_BTN_SEND, IDB_MENU_SEND);     // если есть в меню
+    // setOwnerDrawForCommand(IDC_BTN_CLEAR, IDB_MENU_CLEAR);    // если есть в меню
+    // setOwnerDrawForCommand(IDM_FILE_SAVEAS, IDB_MENU_SAVEAS);   // если добавишь пункт Save As...
+
+    // -------------------------------------------------------------------------
+
+// После всех изменений — заставляем меню перерисоваться
+// ::DrawMenuBar(window_);
 
     // Try enable dark mode for window decorations. If succeeded - use dark theme colors.
     //BOOL value = TRUE;
@@ -249,6 +331,18 @@ void MainWindow::UpdateConnectionButtons() {
     ::ShowWindow(buttonOpen_, isConnected ? SW_HIDE : SW_SHOW);
     // Show 'Close' when connected, hide otherwise
     ::ShowWindow(buttonClose_, isConnected ? SW_SHOW : SW_HIDE);
+
+    // Enable/disable COM port controls based on connection status
+    BOOL enableControls = !isConnected;
+    if (buttonRefresh_ != nullptr) ::EnableWindow(buttonRefresh_, enableControls);
+    if (comboPort_ != nullptr) ::EnableWindow(comboPort_, enableControls);
+    if (comboBaud_ != nullptr) ::EnableWindow(comboBaud_, enableControls);
+    if (comboDataBits_ != nullptr) ::EnableWindow(comboDataBits_, enableControls);
+    if (comboParity_ != nullptr) ::EnableWindow(comboParity_, enableControls);
+    if (comboStopBits_ != nullptr) ::EnableWindow(comboStopBits_, enableControls);
+    if (comboFlow_ != nullptr) ::EnableWindow(comboFlow_, enableControls);
+    if (checkRts_ != nullptr) ::EnableWindow(checkRts_, enableControls);
+    if (checkDtr_ != nullptr) ::EnableWindow(checkDtr_, enableControls);
 }
 
 // Очистка содержимого терминала и сброс счётчиков
@@ -516,6 +610,90 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     //    ::SetTextColor(dc, ::GetSysColor(COLOR_WINDOWTEXT));
     //    return reinterpret_cast<LRESULT>(::GetSysColorBrush(COLOR_WINDOW));
     //}
+// case WM_MEASUREITEM:
+// {
+//     LPMEASUREITEMSTRUCT mis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
+//     if (mis->CtlType == ODT_MENU)
+//     {
+//         // Константы для иконки и отступов
+//         constexpr int ICON_WIDTH  = 16;
+//         constexpr int ICON_HEIGHT = 16;
+//         constexpr int LEFT_MARGIN = 6;   // отступ слева от края пункта
+//         constexpr int GAP_AFTER_ICON = 8;  // расстояние между иконкой и текстом
+
+//         // Если нет данных или itemID — ничего не меряем
+//         if (mis->itemData == 0 || mis->itemID == 0) {
+//             mis->itemWidth = ICON_WIDTH + LEFT_MARGIN + GAP_AFTER_ICON;
+//             mis->itemHeight = std::max<int>(mis->itemHeight, ICON_HEIGHT + 4);
+//             return TRUE;
+//         }
+
+//         // Получаем текст пункта меню по его command id
+//         std::wstring text = FindMenuItemTextByCommand(nullptr, ::GetMenu(window_), static_cast<UINT>(mis->itemID));
+
+//         SIZE textExtent{0,0};
+//         HDC hdc = ::GetDC(window_);
+//         if (hdc && !text.empty()) {
+//             ::SetBkMode(hdc, TRANSPARENT);
+//             ::GetTextExtentPoint32W(hdc, text.c_str(), static_cast<int>(text.length()), &textExtent);
+//             ::ReleaseDC(window_, hdc);
+//         } else if (hdc) {
+//             ::ReleaseDC(window_, hdc);
+//         }
+
+//         mis->itemWidth = LEFT_MARGIN + ICON_WIDTH + GAP_AFTER_ICON + textExtent.cx + 12; // padding
+//         mis->itemHeight = std::max<int>(mis->itemHeight, ICON_HEIGHT + 6);
+//     }
+//     return TRUE;
+// }
+
+// case WM_DRAWITEM:
+// {
+//     LPDRAWITEMSTRUCT dis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
+//     if (dis->CtlType != ODT_MENU)
+//         break;
+
+//     // Если нет данных → ничего не рисуем (пункты без иконок)
+//     if (dis->itemData == 0)
+//         return TRUE;
+
+//     int iconResId = static_cast<int>(dis->itemData);
+//     HICON hIcon = GetCachedIcon(iconResId);
+
+//     // Background
+//     bool selected = (dis->itemState & ODS_SELECTED) != 0;
+//     HBRUSH bg = selected ? reinterpret_cast<HBRUSH>(::GetSysColorBrush(COLOR_HIGHLIGHT)) : reinterpret_cast<HBRUSH>(::GetSysColorBrush(COLOR_MENU));
+//     ::FillRect(dis->hDC, &dis->rcItem, bg);
+
+//     // Draw icon if available
+//     constexpr int ICON_SIZE = 16;
+//     constexpr int LEFT_MARGIN = 6;
+//     int iconX = dis->rcItem.left + LEFT_MARGIN;
+//     int iconY = dis->rcItem.top + (dis->rcItem.bottom - dis->rcItem.top - ICON_SIZE) / 2;
+//     if (hIcon) {
+//         ::DrawIconEx(dis->hDC, iconX, iconY, hIcon, ICON_SIZE, ICON_SIZE, 0, nullptr, DI_NORMAL);
+//     }
+
+//     // Draw text
+//     std::wstring text = FindMenuItemTextByCommand(nullptr, ::GetMenu(window_), static_cast<UINT>(dis->itemID));
+//     if (!text.empty()) {
+//         // Text position
+//         int textX = iconX + ICON_SIZE + 8;
+//         int textY = dis->rcItem.top + ((dis->rcItem.bottom - dis->rcItem.top) - 16) / 2;
+
+//         // Set text color depending on selection
+//         COLORREF textColor = selected ? ::GetSysColor(COLOR_HIGHLIGHTTEXT) : ::GetSysColor(COLOR_MENUTEXT);
+//         ::SetTextColor(dis->hDC, textColor);
+//         ::SetBkMode(dis->hDC, TRANSPARENT);
+
+//         RECT textRect = dis->rcItem;
+//         textRect.left = textX;
+//         textRect.right -= 8;
+//         ::DrawTextW(dis->hDC, text.c_str(), static_cast<int>(text.length()), &textRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
+//     }
+
+//     return TRUE;
+// }
 
     case WM_CTLCOLORSTATIC: {
         HWND control = reinterpret_cast<HWND>(lParam);
@@ -563,5 +741,44 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     return ::DefWindowProcW(hwnd, msg, wParam, lParam);
 }
+
+// HICON MainWindow::GetCachedIcon(int resId)
+// {
+//     static std::unordered_map<int, HICON> cache;
+//     auto it = cache.find(resId);
+//     if (it != cache.end()) return it->second;
+
+//     // Use system small icon size to respect DPI / menu metrics
+//     const int cx = ::GetSystemMetrics(SM_CXSMICON);
+//     const int cy = ::GetSystemMetrics(SM_CYSMICON);
+
+//     HICON h = (HICON)::LoadImage(
+//         instance_,
+//         MAKEINTRESOURCE(resId),
+//         IMAGE_ICON,
+//         cx, cy,
+//         LR_DEFAULTCOLOR | LR_SHARED   // LR_SHARED — чтобы не уничтожать вручную
+//     );
+
+//     // Fallback: try to load default-sized icon (resource may not support requested size)
+//     if (!h) {
+//         DWORD err = ::GetLastError();
+//         std::string msg = "GetCachedIcon: LoadImage failed. resId=" + std::to_string(resId) + " err=" + std::to_string(err) + "\n";
+//         ::OutputDebugStringA(msg.c_str());
+
+//         h = ::LoadIcon(instance_, MAKEINTRESOURCE(resId));
+//         if (!h) {
+//             // Try a system icon so we can visually debug menu drawing
+//             ::OutputDebugStringA("GetCachedIcon: resource icon load failed, falling back to IDI_APPLICATION\n");
+//             h = ::LoadIcon(nullptr, IDI_APPLICATION);
+//             if (!h) {
+//                 ::OutputDebugStringA("GetCachedIcon: fallback system icon load also failed\n");
+//             }
+//         }
+//     }
+
+//     if (h) cache[resId] = h;
+//     return h;
+// }
 
 } // namespace ui

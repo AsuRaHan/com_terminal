@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+
 #include <dbt.h>
 
 #include <cstdint>
@@ -111,6 +112,7 @@ private:
     void CopySelectedText(); // Copies selected text from rich edit to clipboard
     void SelectAllText(); // Selects all text in the rich edit control
     void SaveLogToFile(); // Opens Save File dialog and saves log content to a file
+    HICON GetCachedIcon(int resId); // Loads and caches icons for menu items
 
 };
 

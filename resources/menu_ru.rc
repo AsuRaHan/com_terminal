@@ -1,9 +1,10 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+
 IDR_MAIN_MENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "В&ыход\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "Вы&ход\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Порт"
     BEGIN
@@ -15,9 +16,8 @@ BEGIN
     POPUP "&Правка"
     BEGIN
         MENUITEM "&Копировать\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "Выделить &все\tCtrl+A", IDM_EDIT_SELECTALL
+        MENUITEM "Выбрать всё\tCtrl+A", IDM_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Очистить\tCtrl+L", IDC_BTN_CLEAR
     END
-
 END

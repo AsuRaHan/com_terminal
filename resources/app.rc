@@ -6,6 +6,7 @@
 #include "resource.h"
 // Иконки
 IDI_APP_ICON ICON "app.ico"
+// #include "menus.rc"
 
 // Нейтральные / английские строки (без LANGUAGE)
 #include "strings_en.rc"

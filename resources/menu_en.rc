@@ -2,20 +2,19 @@ IDR_MAIN_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
+       MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Port"
     BEGIN
-        MENUITEM "&Open\tCtrl+O", IDM_PORT_OPEN
-        MENUITEM "&Close\tCtrl+Q", IDM_PORT_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "&Refresh\tCtrl+R", IDM_PORT_REFRESH
+       MENUITEM "&Open\tCtrl+O", IDM_PORT_OPEN
+       MENUITEM "&Close\tCtrl+Q", IDM_PORT_CLOSE
+       MENUITEM "&Refresh\tCtrl+R", IDM_PORT_REFRESH
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Copy\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "Select &All\tCtrl+A", IDM_EDIT_SELECTALL
-        MENUITEM SEPARATOR
-        MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
+       MENUITEM "&Copy\tCtrl+C", IDM_EDIT_COPY
+       MENUITEM "Select &All\tCtrl+A", IDM_EDIT_SELECTALL
+       MENUITEM SEPARATOR
+       MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
     END
 END
