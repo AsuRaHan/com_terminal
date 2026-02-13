@@ -29,7 +29,11 @@ bool EnableDpiAwareness() {
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow){
     if (!EnableDpiAwareness()) {
-        ::MessageBox(nullptr, L"Failed to enable DPI awareness.", L"Error", MB_ICONERROR);
+        std::wstring buf(256, 0);
+        ::LoadString(hInstance, IDS_ERROR_DPI, &buf[0], static_cast<int>(buf.size()));
+        std::wstring title(256, 0);
+        ::LoadString(hInstance, IDS_ERROR_TITLE, &title[0], static_cast<int>(title.size()));
+        ::MessageBox(nullptr, buf.c_str(), title.c_str(), MB_ICONERROR);
         return 1;
     }
     HRESULT hr = S_OK;
@@ -39,7 +43,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow){
         hr = HRESULT_FROM_WIN32(::GetLastError());
     }
     if (!SUCCEEDED(hr)) {
-        ::MessageBox(nullptr, L"Failed to load Msftedit.dll.", L"Error", MB_ICONERROR);
+        std::wstring buf(256, 0);
+        ::LoadString(hInstance, IDS_ERROR_MSFTEDIT, &buf[0], static_cast<int>(buf.size()));
+        std::wstring title(256, 0);
+        ::LoadString(hInstance, IDS_ERROR_TITLE, &title[0], static_cast<int>(title.size()));
+        ::MessageBox(nullptr, buf.c_str(), title.c_str(), MB_ICONERROR);
         return 2;
     }
 
@@ -51,14 +59,25 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow){
     const HACCEL accelerators = ::LoadAccelerators(hInstance, MAKEINTRESOURCEW(IDR_MAIN_ACCEL));
 
     MSG msg{};
-    while (::GetMessage(&msg, nullptr, 0, 0) > 0) {
+    // Обработка сообщения с проверкой на ошибку GetMessage
+    int msgResult = 0;
+    while ((msgResult = ::GetMessage(&msg, nullptr, 0, 0)) > 0) {
         if (accelerators != nullptr && ::TranslateAccelerator(mainWindow.Handle(), accelerators, &msg)) {
             continue;
         }
-
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
     }
+    // Если GetMessage вернул -1, произошла ошибка
+    if (msgResult == -1) {
+        std::wstring buf(256, 0);
+        ::LoadString(hInstance, IDS_ERROR_MESSAGES, &buf[0], static_cast<int>(buf.size()));
+        std::wstring title(256, 0);
+        ::LoadString(hInstance, IDS_ERROR_TITLE, &title[0], static_cast<int>(title.size()));
+        ::MessageBox(nullptr, buf.c_str(), title.c_str(), MB_ICONERROR);
+        return 4;
+    }
 
+    ::FreeLibrary(hMsftedit); // Освобождаем библиотеку перед выходом
     return static_cast<int>(msg.wParam);
 }

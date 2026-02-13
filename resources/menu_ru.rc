@@ -1,0 +1,23 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+IDR_MAIN_MENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "В&ыход\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Порт"
+    BEGIN
+        MENUITEM "&Открыть\tCtrl+O", IDM_PORT_OPEN
+        MENUITEM "&Закрыть\tCtrl+Q", IDM_PORT_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tCtrl+R", IDM_PORT_REFRESH
+    END
+    POPUP "&Правка"
+    BEGIN
+        MENUITEM "&Копировать\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Выделить &все\tCtrl+A", IDM_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Очистить\tCtrl+L", IDC_BTN_CLEAR
+    END
+
+END

@@ -1,3 +1,5 @@
+#pragma code_page(65001)
+
 #include <windows.h>
 #include <commctrl.h>
 #include <winres.h>
@@ -5,29 +7,16 @@
 // Иконки
 IDI_APP_ICON ICON "app.ico"
 
+// Нейтральные / английские строки (без LANGUAGE)
+#include "strings_en.rc"
 // Меню
-IDR_MAIN_MENU MENU
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
-    END
-    POPUP "&Port"
-    BEGIN
-        MENUITEM "&Open\tCtrl+O", IDM_PORT_OPEN
-        MENUITEM "&Close\tCtrl+Q", IDM_PORT_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "&Refresh\tCtrl+R", IDM_PORT_REFRESH
-    END
-    POPUP "&Edit"
-    BEGIN
-        MENUITEM "&Copy\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "Select &All\tCtrl+A", IDM_EDIT_SELECTALL
-        MENUITEM SEPARATOR
-        MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
-    END
+#include "menu_en.rc"
 
-END
+
+// Русские  строки
+#include "strings_ru.rc"
+// Русское меню
+#include "menu_ru.rc"
 
 // Акселераторы (горячие клавиши)
 IDR_MAIN_ACCEL ACCELERATORS
@@ -39,6 +28,8 @@ BEGIN
     "L", IDC_BTN_CLEAR, VIRTKEY, CONTROL
     "A", IDM_EDIT_SELECTALL, VIRTKEY, CONTROL
 END
+
+
 
 // Версия
 VS_VERSION_INFO VERSIONINFO
@@ -58,11 +49,11 @@ BEGIN
     BEGIN
         BLOCK "041904B0"
         BEGIN
-            VALUE "CompanyName", "COM Terminal"
+            VALUE "CompanyName", "rrdev.ru"
             VALUE "FileDescription", "AsuRaHan COM Port Terminal"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "COMTerminal"
-            VALUE "LegalCopyright", ""
+            VALUE "LegalCopyright", "logic@xaker.ru"
             VALUE "OriginalFilename", "COMTerminal.exe"
             VALUE "ProductName", "COM Terminal"
             VALUE "ProductVersion", "1.0.0.0"

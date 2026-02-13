@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef COMTERMINAL_RESOURCE_H
 #define COMTERMINAL_RESOURCE_H
 
@@ -7,6 +9,73 @@
 #define IDR_MAIN_ACCEL 104
 #define IDB_TOOLBAR 105
 #define ID_MANIFEST 106
+
+// String resource IDs
+#define IDS_ERROR_DPI 107
+#define IDS_ERROR_MSFTEDIT 108
+#define IDS_ERROR_MESSAGES 109
+#define IDS_ERROR_TITLE 110
+#define IDS_PORT_LIST_REFRESHED 111
+#define IDS_NO_PORTS_FOUND 112
+#define IDS_NO_COM_PORT 113
+#define IDS_INVALID_SERIAL 114
+#define IDS_FAILED_OPEN 115
+// Port closed
+#define IDS_PORT_CLOSED 140
+// Port not open
+#define IDS_PORT_NOT_OPEN 141
+// Status connected
+#define IDS_STATUS_CONNECTED 142
+// No data to send
+#define IDS_NO_DATA_TO_SEND 152
+// Status bar strings
+#define IDS_STATUS_DISCONNECTED 116
+#define IDS_STATUS_TXRX 117
+#define IDS_STATUS_READY 118
+
+// Tooltips IDs
+// 119-... reserved for tooltips
+// We'll start at 119 for tooltip of comboPort
+#define IDS_TIP_COMBO_PORT 119
+#define IDS_TIP_COMBO_BAUD 120
+#define IDS_TIP_BUTTON_REFRESH 121
+#define IDS_TIP_BUTTON_OPEN 122
+#define IDS_TIP_BUTTON_CLOSE 123
+#define IDS_TIP_COMBO_DATABITS 124
+#define IDS_TIP_COMBO_PARITY 125
+#define IDS_TIP_COMBO_STOPBITS 126
+#define IDS_TIP_COMBO_FLOW 127
+#define IDS_TIP_CHECK_RTS 128
+#define IDS_TIP_CHECK_DTR 129
+#define IDS_TIP_COMBO_RXMODE 130
+#define IDS_TIP_CHECK_SAVELOG 131
+#define IDS_TIP_BUTTON_CLEAR 132
+#define IDS_TIP_EDIT_SEND 133
+#define IDS_TIP_BUTTON_SEND 134
+#define IDS_TIP_GROUP_PORT 135
+#define IDS_TIP_GROUP_STATS 136
+#define IDS_TIP_GROUP_LOG 137
+#define IDS_TIP_GROUP_TERMINAL_CTRL 138
+#define IDS_TIP_GROUP_SEND 139
+
+// UI text strings
+// Group titles
+#define IDS_GROUP_PORT_TEXT 140
+#define IDS_GROUP_LOG_TEXT 141
+#define IDS_GROUP_TERMINAL_CTRL_TEXT 142
+#define IDS_GROUP_SEND_TEXT 143
+// Button texts
+#define IDS_BTN_REFRESH_TEXT 144
+#define IDS_BTN_OPEN_TEXT 145
+#define IDS_BTN_CLOSE_TEXT 146
+#define IDS_BTN_CLEAR_TEXT 147
+#define IDS_BTN_SEND_TEXT 148
+// ComboBox items
+#define IDS_RM_TEXT 149
+#define IDS_RM_HEX 150
+// Status bar connected text (already defined as IDS_STATUS_CONNECTED earlier)
+// Opened message template
+#define IDS_OPENED_MESSAGE 151
 
 // Menu IDs
 #define IDM_FILE_EXIT 40001
