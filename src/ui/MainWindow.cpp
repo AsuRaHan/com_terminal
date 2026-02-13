@@ -23,7 +23,7 @@ constexpr GUID kGuidDevinterfaceComport = {
 
 RECT CenteredRect(int width, int height) {
     RECT workArea{};
-    ::SystemParametersInfoW(SPI_GETWORKAREA, 0, &workArea, 0);
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
 
     const int x = workArea.left + ((workArea.right - workArea.left) - width) / 2;
     const int y = workArea.top + ((workArea.bottom - workArea.top) - height) / 2;
@@ -68,14 +68,12 @@ MainWindow::MainWindow(HINSTANCE instance):
     serialPort_(),
     logVirtualizer_(2000, 5000, 5U * 1024U * 1024U),
     rebuildingRichEdit_(false),
-    // isDarkTheme_(false),
     txBytes_(0),
     rxBytes_(0),
     tooltip_(nullptr),
     builder_(std::make_unique<WindowBuilder>(*this)),
     layout_(std::make_unique<WindowLayout>(*this)),
     actions_(std::make_unique<WindowActions>(*this)) {
-
 }
 
 MainWindow::~MainWindow() {
@@ -110,8 +108,9 @@ bool MainWindow::Create(int nCmdShow) {
         return false;
     }
 
-    BOOL value = TRUE;
-    ::DwmSetWindowAttribute(window_, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+    // Try enable dark mode for window decorations. If succeeded - use dark theme colors.
+    //BOOL value = TRUE;
+    //HRESULT hr = ::DwmSetWindowAttribute(window_, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
 
     ::ShowWindow(window_, nCmdShow);
     ::UpdateWindow(window_);
@@ -128,11 +127,11 @@ bool MainWindow::RegisterClass() {
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = &MainWindow::WndProcSetup;
     wc.hInstance = instance_;
-    wc.hCursor = ::LoadCursorW(nullptr, IDC_ARROW);
-    wc.hIcon = reinterpret_cast<HICON>(::LoadImageW(instance_, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
+    wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+    wc.hIcon = reinterpret_cast<HICON>(::LoadImage(instance_, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR));
     wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     wc.lpszClassName = L"COMTerminalMainWindow";
-    wc.hIconSm = reinterpret_cast<HICON>(::LoadImageW(instance_, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
+    wc.hIconSm = reinterpret_cast<HICON>(::LoadImage(instance_, MAKEINTRESOURCEW(IDI_APP_ICON), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR));
 
     return ::RegisterClassExW(&wc) != 0;
 }
@@ -307,11 +306,11 @@ void MainWindow::SaveLogToFile() {
     ofn.lpstrDefExt = L"log";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
     
-    if (::GetSaveFileNameW(&ofn)) {
+    if (::GetSaveFileName(&ofn)) {
         // Сохраняем содержимое richEdit в файл
         std::ofstream file(filename);
         if (file.is_open()) {
-            int len = ::GetWindowTextLengthW(richLog_);
+            int len = ::GetWindowTextLength(richLog_);
             std::wstring text(len + 1, L'\0');
             ::GetWindowTextW(richLog_, text.data(), len + 1);
             
@@ -476,100 +475,63 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         break;
         
-    // case WM_CTLCOLORBTN: {
-    //     HWND control = reinterpret_cast<HWND>(lParam);
-    //     HDC dc = reinterpret_cast<HDC>(wParam);
-        
-    //     // Проверяем, это GroupBox?
-    //     wchar_t className[64];
-    //     ::GetClassName(control, className, 64);
-        
-    //     if (wcscmp(className, WC_BUTTONW) == 0) {
-    //         LONG style = ::GetWindowLongW(control, GWL_STYLE);
-    //         if (style & BS_GROUPBOX) {
-    //             if (isDarkTheme_) {
-    //                 ::SetBkColor(dc, RGB(32, 32, 32));
-    //                 ::SetTextColor(dc, RGB(240, 240, 240));
-    //                 return reinterpret_cast<LRESULT>(groupBrush_);
-    //             } else {
-    //                 ::SetBkColor(dc, RGB(240, 240, 240));
-    //                 ::SetTextColor(dc, RGB(0, 0, 0));
-    //                 return reinterpret_cast<LRESULT>(groupBrush_);
-    //             }
-    //         }
-    //     }
-    //     break;
-    // }
+    //case WM_CTLCOLORBTN: {
+    //    HWND control = reinterpret_cast<HWND>(lParam);
+    //    HDC dc = reinterpret_cast<HDC>(wParam);
+
+    //    // Проверяем, это Button class (группбокс или чекбокс)
+    //    wchar_t className[64] = {};
+    //    ::GetClassNameW(control, className, _countof(className));
+
+    //    if (wcscmp(className, WC_BUTTONW) == 0) {
+    //        LONG style = ::GetWindowLongW(control, GWL_STYLE);
+    //        // GroupBox: делаем текст прозрачным, фон не рисуем
+    //        if (style & BS_GROUPBOX) {
+    //            ::SetBkMode(dc, TRANSPARENT);
+    //            ::SetTextColor(dc, ::GetSysColor(COLOR_WINDOWTEXT));
+    //            return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
+    //        }
+
+    //        // Checkboxes / Radio buttons: тоже делаем прозрачными
+    //        if (style & (BS_AUTOCHECKBOX | BS_CHECKBOX | BS_AUTORADIOBUTTON | BS_RADIOBUTTON)) {
+    //            ::SetBkMode(dc, TRANSPARENT);
+    //            ::SetTextColor(dc, ::GetSysColor(COLOR_WINDOWTEXT));
+    //            return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
+    //        }
+    //    }
+    //    break;
+    //}
     
-    // case WM_CTLCOLOREDIT: {
-    //     HDC dc = reinterpret_cast<HDC>(wParam);
-        
-    //     if (isDarkTheme_) {
-    //         ::SetBkColor(dc, RGB(45, 45, 45));
-    //         ::SetTextColor(dc, RGB(255, 255, 255));
-    //         return reinterpret_cast<LRESULT>(editBrush_);
-    //     } else {
-    //         ::SetBkColor(dc, RGB(255, 255, 255));
-    //         ::SetTextColor(dc, RGB(0, 0, 0));
-    //         return reinterpret_cast<LRESULT>(editBrush_);
-    //     }
-    //     break;
-    // }
+    //case WM_CTLCOLOREDIT: {
+    //    HDC dc = reinterpret_cast<HDC>(wParam);
+    //    // Use default background for edit controls
+    //    ::SetBkColor(dc, ::GetSysColor(COLOR_WINDOW));
+    //    ::SetTextColor(dc, ::GetSysColor(COLOR_WINDOWTEXT));
+    //    return reinterpret_cast<LRESULT>(::GetSysColorBrush(COLOR_WINDOW));
+    //}
 
-    // case WM_CTLCOLORLISTBOX: {
-    //     HDC dc = reinterpret_cast<HDC>(wParam);
-        
-    //     if (isDarkTheme_) {
-    //         ::SetBkColor(dc, RGB(45, 45, 45));
-    //         ::SetTextColor(dc, RGB(240, 240, 240));
-    //         return reinterpret_cast<LRESULT>(comboBrush_);
-    //     }
-    //     break;
-    // }
+    //case WM_CTLCOLORLISTBOX: {
+    //    HDC dc = reinterpret_cast<HDC>(wParam);
+    //    ::SetBkColor(dc, ::GetSysColor(COLOR_WINDOW));
+    //    ::SetTextColor(dc, ::GetSysColor(COLOR_WINDOWTEXT));
+    //    return reinterpret_cast<LRESULT>(::GetSysColorBrush(COLOR_WINDOW));
+    //}
 
-    // case WM_CTLCOLORSTATIC: {
-    //     HWND control = reinterpret_cast<HWND>(lParam);
-    //     HDC dc = reinterpret_cast<HDC>(wParam);
-        
-    //     if (isDarkTheme_) {
-    //         if (control == ledStatus_) {
-    //             const bool connected = serialPort_.IsOpen();
-    //             ::SetBkColor(dc, connected ? RGB(40, 140, 60) : RGB(180, 40, 40));
-    //             ::SetTextColor(dc, RGB(255, 255, 255));
-    //             return reinterpret_cast<LRESULT>(connected ? 
-    //                 ledBrushConnected_ : ledBrushDisconnected_);
-    //         }
-            
-    //         // Для ВСЕХ статиков - прозрачный фон!
-    //         ::SetBkMode(dc, TRANSPARENT);
-    //         ::SetTextColor(dc, RGB(240, 240, 240));
-    //         return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
-    //     } else {
-    //         if (control == ledStatus_) {
-    //             const bool connected = serialPort_.IsOpen();
-    //             ::SetBkColor(dc, connected ? RGB(50, 160, 70) : RGB(200, 50, 50));
-    //             ::SetTextColor(dc, RGB(255, 255, 255));
-    //             return reinterpret_cast<LRESULT>(connected ? 
-    //                 ledBrushConnected_ : ledBrushDisconnected_);
-    //         }
-            
-    //         // В светлой теме тоже делаем прозрачными!
-    //         ::SetBkMode(dc, TRANSPARENT);
-    //         ::SetTextColor(dc, RGB(0, 0, 0));
-    //         return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
-    //     }
-    //     break;
-    // }
-
-    // case WM_ERASEBKGND: {
-    //     HDC dc = reinterpret_cast<HDC>(wParam);
-    //     RECT rc;
-    //     ::GetClientRect(hwnd, &rc);
-        
-    //     HBRUSH brush = isDarkTheme_ ? bgBrush_ : reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
-    //     ::FillRect(dc, &rc, brush);
-    //     return 1;
-    // }
+    case WM_CTLCOLORSTATIC: {
+        HWND control = reinterpret_cast<HWND>(lParam);
+        HDC dc = reinterpret_cast<HDC>(wParam);
+        // Special case: led status has colored background
+        if (control == ledStatus_) {
+            const bool connected = serialPort_.IsOpen();
+            ::SetBkColor(dc, connected ? RGB(50, 160, 70) : RGB(200, 50, 50));
+            ::SetTextColor(dc, RGB(255, 255, 255));
+            return reinterpret_cast<LRESULT>(connected ? ledBrushConnected_ : ledBrushDisconnected_);
+        }
+        // For all other static controls make background transparent so they match the window
+        ::SetBkMode(dc, TRANSPARENT);
+        ::SetTextColor(dc, ::GetSysColor(COLOR_WINDOWTEXT));
+        return reinterpret_cast<LRESULT>(::GetStockObject(NULL_BRUSH));
+    }
 
     case WM_DEVICECHANGE:
         if (wParam == DBT_DEVICEARRIVAL || wParam == DBT_DEVICEREMOVECOMPLETE) {
@@ -588,7 +550,6 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     case WM_DESTROY:
         actions_->ClosePort();
-        // SaveThemeSetting(isDarkTheme_);
         if (deviceNotify_ != nullptr) {
             ::UnregisterDeviceNotification(deviceNotify_);
             deviceNotify_ = nullptr;

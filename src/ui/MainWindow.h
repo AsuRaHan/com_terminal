@@ -55,10 +55,6 @@ private:
     static std::wstring BuildTimestamp();
     static std::wstring BytesToHex(const std::vector<uint8_t>& bytes);
 
-    // bool isDarkTheme_;
-        // Цвета для лога с учетом темы - НЕ статический!
-    COLORREF ColorForLogKindWithTheme(LogKind kind);
-
     HINSTANCE instance_;
     HWND window_;
     HWND statusBar_;

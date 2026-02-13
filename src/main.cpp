@@ -1,5 +1,4 @@
 #include <windows.h>
-
 #include "resource.h"
 #include "ui/MainWindow.h"
 
@@ -28,14 +27,18 @@ bool EnableDpiAwareness() {
 
 } // namespace
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow) {
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow){
     if (!EnableDpiAwareness()) {
         ::MessageBox(nullptr, L"Failed to enable DPI awareness.", L"Error", MB_ICONERROR);
         return 1;
     }
-
-    HMODULE hMsftedit = ::LoadLibrary(L"Msftedit.dll"); // Загружаем библиотеку для RichEdit 4.1
-    if (hMsftedit == nullptr) {
+    HRESULT hr = S_OK;
+    HMODULE hMsftedit = ::LoadLibrary(L"msftedit.dll"); // Загружаем библиотеку для RichEdit 4.1 или выше
+    if (!hMsftedit)
+    {
+        hr = HRESULT_FROM_WIN32(::GetLastError());
+    }
+    if (!SUCCEEDED(hr)) {
         ::MessageBox(nullptr, L"Failed to load Msftedit.dll.", L"Error", MB_ICONERROR);
         return 2;
     }

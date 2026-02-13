@@ -303,7 +303,7 @@ void WindowBuilder::CreateControls() {
     owner_.buttonOpen_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"▶ Open",  // Символ play
+        L"Open",
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
@@ -314,7 +314,7 @@ void WindowBuilder::CreateControls() {
     owner_.buttonClose_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"■ Close",  // Символ stop
+        L"Close",
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
@@ -459,7 +459,7 @@ void WindowBuilder::CreateControls() {
     owner_.checkSaveLog_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Save log",  // Символ дискеты
+        L"Save log",
         WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
@@ -470,7 +470,7 @@ void WindowBuilder::CreateControls() {
     owner_.buttonClear_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Clear",  // Символ корзины
+        L"Clear",
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
@@ -480,7 +480,7 @@ void WindowBuilder::CreateControls() {
 
     // === Основные элементы ===
     owner_.richLog_ = ::CreateWindowEx(
-        WS_EX_CLIENTEDGE,
+        0,
         MSFTEDIT_CLASS,
         L"",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
