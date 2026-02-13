@@ -1,4 +1,6 @@
 #include "ui/WindowBuilder.h"
+#include <string>
+#include <stddef.h>
 
 namespace ui {
 
@@ -16,16 +18,27 @@ void WindowBuilder::CreateStatusBar() {
         owner_.instance_,
         nullptr);
 
-    if (!owner_.statusBar_) {
-        OutputDebugString(L"Failed to create status bar\n");
-        return;
-    }
-
     int parts[3] = {260, 520, -1}; // Три части: статус, статистика, подсказки
     ::SendMessage(owner_.statusBar_, SB_SETPARTS, 3, reinterpret_cast<LPARAM>(parts));
-    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
-    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(L"TX: 0  RX: 0"));
-    ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(L"Ready"));
+    // Load status bar strings from resources
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_STATUS_DISCONNECTED, buf, _countof(buf));
+        std::wstring text = len > 0 ? buf : L"Disconnected";
+        ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(text.c_str()));
+    }
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_STATUS_TXRX, buf, _countof(buf));
+        std::wstring text = len > 0 ? buf : L"TX: 0  RX: 0";
+        ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(text.c_str()));
+    }
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_STATUS_READY, buf, _countof(buf));
+        std::wstring text = len > 0 ? buf : L"Ready";
+        ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(text.c_str()));
+    }
     // ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 3, reinterpret_cast<LPARAM>(L"Press F1 for help"));
 }
 
@@ -42,11 +55,6 @@ void WindowBuilder::CreateTooltips() {
         nullptr,
         owner_.instance_,
         nullptr);
-
-    if (!owner_.tooltip_) {
-        OutputDebugString(L"Failed to create tooltips\n");
-        return;
-    }
 
     // Настройка
     ::SendMessage(owner_.tooltip_, TTM_SETMAXTIPWIDTH, 0, 400);
@@ -84,51 +92,48 @@ void WindowBuilder::AddTooltip(HWND control, const std::wstring& text, const std
     ::SendMessage(owner_.tooltip_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 }
 
-void WindowBuilder::AddAllTooltips() {    
+void WindowBuilder::AddAllTooltips() {
+    // Helper lambda to load string from resources with fallback
+    auto add = [&](HWND ctrl, int id, const std::wstring& title, const std::wstring& fallback) {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, id, buf, _countof(buf));
+        std::wstring txt = len > 0 ? buf : fallback;
+        AddTooltip(ctrl, txt, title);
+    };
+
     // ============ Port Settings ============
-    AddTooltip(owner_.comboPort_, 
-        L"Select COM port. Click Refresh to update list.",
-        L"COM Port");
+    add(owner_.comboPort_, IDS_TIP_COMBO_PORT, L"COM Port",
+        L"Select COM port. Click Refresh to update list.");
 
-    AddTooltip(owner_.comboBaud_,
-        L"Baud rate (9600, 19200, 38400, 57600, 115200, etc)",
-        L"Baud Rate");
+        add(owner_.comboBaud_, IDS_TIP_COMBO_BAUD, L"Baud Rate",
+            L"Baud rate (9600, 19200, 38400, 57600, 115200, etc)");
 
-    AddTooltip(owner_.buttonRefresh_,
-        L"Scan for available COM ports",
-        L"Refresh");
+        add(owner_.buttonRefresh_, IDS_TIP_BUTTON_REFRESH, L"Refresh",
+            L"Scan for available COM ports");
 
-    AddTooltip(owner_.buttonOpen_,
-        L"Open selected COM port",
-        L"Open Port");
+        add(owner_.buttonOpen_, IDS_TIP_BUTTON_OPEN, L"Open Port",
+            L"Open selected COM port");
 
-    AddTooltip(owner_.buttonClose_,
-        L"Close current COM port",
-        L"Close Port");
+        add(owner_.buttonClose_, IDS_TIP_BUTTON_CLOSE, L"Close Port",
+            L"Close current COM port");
 
-    AddTooltip(owner_.comboDataBits_,
-        L"Data bits: 5, 6, 7, or 8",
-        L"Data Bits");
+        add(owner_.comboDataBits_, IDS_TIP_COMBO_DATABITS, L"Data Bits",
+            L"Data bits: 5, 6, 7, or 8");
 
-    AddTooltip(owner_.comboParity_,
-        L"Parity: None, Odd, Even, Mark, Space",
-        L"Parity");
+        add(owner_.comboParity_, IDS_TIP_COMBO_PARITY, L"Parity",
+            L"Parity: None, Odd, Even, Mark, Space");
 
-    AddTooltip(owner_.comboStopBits_,
-        L"Stop bits: 1, 1.5, or 2",
-        L"Stop Bits");
+        add(owner_.comboStopBits_, IDS_TIP_COMBO_STOPBITS, L"Stop Bits",
+            L"Stop bits: 1, 1.5, or 2");
 
-    AddTooltip(owner_.comboFlow_,
-        L"Flow control: None, RTS/CTS, XON/XOFF",
-        L"Flow Control");
+        add(owner_.comboFlow_, IDS_TIP_COMBO_FLOW, L"Flow Control",
+            L"Flow control: None, RTS/CTS, XON/XOFF");
 
-    AddTooltip(owner_.checkRts_,
-        L"Request To Send signal",
-        L"RTS");
+        add(owner_.checkRts_, IDS_TIP_CHECK_RTS, L"RTS",
+            L"Request To Send signal");
 
-    AddTooltip(owner_.checkDtr_,
-        L"Data Terminal Ready signal",
-        L"DTR");
+        add(owner_.checkDtr_, IDS_TIP_CHECK_DTR, L"DTR",
+            L"Data Terminal Ready signal");
 
     // ============ Statistics ============
     // AddTooltip(owner_.textTxTotal_,
@@ -148,56 +153,43 @@ void WindowBuilder::AddAllTooltips() {
     //     L"RX Rate");
 
     // ============ Terminal Log ============
-    AddTooltip(owner_.richLog_,
-        L"Terminal output - Green:RX Blue:TX Gray:System Red:Error",
-        L"Terminal Log");
+    add(owner_.richLog_, IDS_TIP_GROUP_LOG, L"Terminal Log",
+        L"Terminal output - Green:RX Blue:TX Gray:System Red:Error");
 
     // ============ Terminal Control ============
-    AddTooltip(owner_.ledStatus_,
-        L"Connection status - Green:Open Red:Closed",
-        L"Status");
+    add(owner_.ledStatus_, IDS_TIP_GROUP_TERMINAL_CTRL, L"Status",
+        L"Connection status - Green:Open Red:Closed");
 
-    AddTooltip(owner_.comboRxMode_,
-        L"Display mode: Text (UTF-8) or HEX",
-        L"RX Mode");
+    add(owner_.comboRxMode_, IDS_TIP_COMBO_RXMODE, L"RX Mode",
+        L"Display mode: Text (UTF-8) or HEX");
 
-    AddTooltip(owner_.checkSaveLog_,
-        L"Save log to file",
-        L"Save Log");
+    add(owner_.checkSaveLog_, IDS_TIP_CHECK_SAVELOG, L"Save Log",
+        L"Save log to file");
 
-    AddTooltip(owner_.buttonClear_,
-        L"Clear terminal and reset counters",
-        L"Clear");
-
+    add(owner_.buttonClear_, IDS_TIP_BUTTON_CLEAR, L"Clear",
+        L"Clear terminal and reset counters");
     // ============ Send Data ============
-    AddTooltip(owner_.editSend_,
-        L"Data to send - Text or HEX (space separated)",
-        L"Send Buffer");
+    add(owner_.editSend_, IDS_TIP_EDIT_SEND, L"Send Buffer",
+        L"Data to send - Text or HEX (space separated)");
 
-    AddTooltip(owner_.buttonSend_,
-        L"Send data",
-        L"Send");
+    add(owner_.buttonSend_, IDS_TIP_BUTTON_SEND, L"Send",
+        L"Send data");
 
     // ============ Groups ============
-    AddTooltip(owner_.groupPort_,
-        L"Serial port configuration",
-        L"Port Settings");
+    add(owner_.groupPort_, IDS_TIP_GROUP_PORT, L"Port Settings",
+        L"Serial port configuration");
 
-    AddTooltip(owner_.groupStats_,
-        L"Communication statistics",
-        L"Statistics");
+    add(owner_.groupStats_, IDS_TIP_GROUP_STATS, L"Statistics",
+        L"Communication statistics");
 
-    AddTooltip(owner_.groupLog_,
-        L"Terminal communication log",
-        L"Log");
+    add(owner_.groupLog_, IDS_TIP_GROUP_LOG, L"Log",
+        L"Terminal communication log");
 
-    AddTooltip(owner_.groupTerminalCtrl_,
-        L"Terminal display controls",
-        L"Terminal Control");
+    add(owner_.groupTerminalCtrl_, IDS_TIP_GROUP_TERMINAL_CTRL, L"Terminal Control",
+        L"Terminal display controls");
 
-    AddTooltip(owner_.groupSend_,
-        L"Send data to device",
-        L"Send Data");
+    add(owner_.groupSend_, IDS_TIP_GROUP_SEND, L"Send Data",
+        L"Send data to device");
 }
 
 void WindowBuilder::CreateControls() {
@@ -205,13 +197,18 @@ void WindowBuilder::CreateControls() {
     owner_.groupPort_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Port Settings",
+        nullptr, // текст задаём после создания
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_GROUP_PORT)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_GROUP_PORT_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.groupPort_, len > 0 ? buf : L"Port Settings");
+    }
 
     // owner_.groupStats_ = ::CreateWindowEx(
     //     0,
@@ -227,35 +224,50 @@ void WindowBuilder::CreateControls() {
     owner_.groupLog_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Terminal Log",
+        nullptr,
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_GROUP_LOG)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_GROUP_LOG_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.groupLog_, len > 0 ? buf : L"Terminal Log");
+    }
 
     owner_.groupTerminalCtrl_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Terminal Control",
+        nullptr,
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_GROUP_TERMINAL_CTRL)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_GROUP_TERMINAL_CTRL_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.groupTerminalCtrl_, len > 0 ? buf : L"Terminal Control");
+    }
 
     owner_.groupSend_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Send Data",
+        nullptr,
         WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_GROUP_SEND)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_GROUP_SEND_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.groupSend_, len > 0 ? buf : L"Send Data");
+    }
 
     // ============ ТЕПЕРЬ СОЗДАЕМ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ ============
     
@@ -263,13 +275,18 @@ void WindowBuilder::CreateControls() {
     owner_.buttonRefresh_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Refresh",  // Добавил символ для наглядности
+        nullptr,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_BTN_REFRESH)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_BTN_REFRESH_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.buttonRefresh_, len > 0 ? buf : L"Refresh");
+    }
 
     owner_.comboPort_ = ::CreateWindowEx(
         0,
@@ -303,24 +320,34 @@ void WindowBuilder::CreateControls() {
     owner_.buttonOpen_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Open",
+        nullptr,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_BTN_OPEN)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_BTN_OPEN_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.buttonOpen_, len > 0 ? buf : L"Open");
+    }
 
     owner_.buttonClose_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Close",
+        nullptr,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_BTN_CLOSE)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_BTN_CLOSE_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.buttonClose_, len > 0 ? buf : L"Close");
+    }
 
     owner_.comboDataBits_ = ::CreateWindowEx(
         0,
@@ -470,13 +497,18 @@ void WindowBuilder::CreateControls() {
     owner_.buttonClear_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Clear",
+        nullptr,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_BTN_CLEAR)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_BTN_CLEAR_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.buttonClear_, len > 0 ? buf : L"Clear");
+    }
 
     // === Основные элементы ===
     owner_.richLog_ = ::CreateWindowEx(
@@ -504,13 +536,18 @@ void WindowBuilder::CreateControls() {
     owner_.buttonSend_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,
-        L"Send",  // Символ отправки
+        nullptr,
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 0, 0,
         owner_.window_,
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_BTN_SEND)),
         owner_.instance_,
         nullptr);
+    {
+        wchar_t buf[256] = {0};
+        int len = LoadStringW(owner_.instance_, IDS_BTN_SEND_TEXT, buf, _countof(buf));
+        ::SetWindowText(owner_.buttonSend_, len > 0 ? buf : L"Send");
+    }
 
     // ============ Установка шрифта для лога ============
     CHARFORMAT2W format{};

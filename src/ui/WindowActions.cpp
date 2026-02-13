@@ -76,7 +76,7 @@ bool WindowActions::OpenSelectedPort() {
     owner_.rxBytes_ = 0;
     owner_.UpdateStatusText();
 
-    ::SetWindowTextW(owner_.ledStatus_, L"Connected");
+    ::SetWindowText(owner_.ledStatus_, L"Connected");
     ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Connected"));
     owner_.AppendLog(LogKind::System, L"Opened " + portName + L" @ " + std::to_wstring(settings.baudRate));
     // Update button visibility after successful connection
@@ -88,7 +88,7 @@ void WindowActions::ClosePort() {
     owner_.serialPort_.SetDataCallback({});
     if (owner_.serialPort_.IsOpen()) {
         owner_.serialPort_.Close();
-        ::SetWindowTextW(owner_.ledStatus_, L"Disconnected");
+        ::SetWindowText(owner_.ledStatus_, L"Disconnected");
         ::SendMessage(owner_.statusBar_, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(L"Disconnected"));
         owner_.AppendLog(LogKind::System, L"Port closed");
         // Update button visibility after closing
@@ -102,14 +102,14 @@ void WindowActions::SendInputData() {
         return;
     }
 
-    const int length = ::GetWindowTextLengthW(owner_.editSend_);
+    const int length = ::GetWindowTextLength(owner_.editSend_);
     if (length <= 0) {
         return;
     }
 
     std::wstring text;
     text.resize(static_cast<std::size_t>(length));
-    ::GetWindowTextW(owner_.editSend_, text.data(), length + 1);
+    ::GetWindowText(owner_.editSend_, text.data(), length + 1);
 
     std::vector<uint8_t> bytes;
     
@@ -212,7 +212,7 @@ void WindowActions::HandleSerialData(const std::vector<uint8_t>& bytes) {
 }
 
 std::wstring WindowActions::ComboText(HWND combo) {
-    const int len = ::GetWindowTextLengthW(combo);
+    const int len = ::GetWindowTextLength(combo);
     if (len <= 0) {
         return L"";
     }

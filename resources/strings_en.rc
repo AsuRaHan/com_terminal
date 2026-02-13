@@ -35,4 +35,16 @@ BEGIN
     IDS_TIP_GROUP_LOG "Terminal communication log"
     IDS_TIP_GROUP_TERMINAL_CTRL "Terminal display controls"
     IDS_TIP_GROUP_SEND "Send data to device"
+    // Additional UI strings
+    IDS_GROUP_PORT_TEXT "Port Settings"
+    IDS_GROUP_LOG_TEXT "Terminal Log"
+    IDS_GROUP_TERMINAL_CTRL_TEXT "Terminal Control"
+    IDS_GROUP_SEND_TEXT "Send Data"
+    IDS_BTN_REFRESH_TEXT "Refresh"
+    IDS_BTN_OPEN_TEXT "Open"
+    IDS_BTN_CLOSE_TEXT "Close"
+    IDS_BTN_CLEAR_TEXT "Clear"
+    IDS_BTN_SEND_TEXT "Send"
+    IDS_RM_TEXT "Text"
+    IDS_RM_HEX "HEX"
 END

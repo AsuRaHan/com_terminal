@@ -36,4 +36,16 @@ BEGIN
     IDS_TIP_GROUP_LOG "Журнал терминальной связи"
     IDS_TIP_GROUP_TERMINAL_CTRL "Управление отображением терминала"
     IDS_TIP_GROUP_SEND "Отправить данные устройству"
+    // Дополнительные UI строки
+    IDS_GROUP_PORT_TEXT "Настройка последовательного порта"
+    IDS_GROUP_LOG_TEXT "Терминальный лог"
+    IDS_GROUP_TERMINAL_CTRL_TEXT "Управление отображением терминала"
+    IDS_GROUP_SEND_TEXT "Отправка данных"
+    IDS_BTN_REFRESH_TEXT "Обновить"
+    IDS_BTN_OPEN_TEXT "Открыть"
+    IDS_BTN_CLOSE_TEXT "Закрыть"
+    IDS_BTN_CLEAR_TEXT "Очистить"
+    IDS_BTN_SEND_TEXT "Отправить"
+    IDS_RM_TEXT "Текст"
+    IDS_RM_HEX "HEX"
 END

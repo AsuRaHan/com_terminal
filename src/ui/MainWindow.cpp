@@ -100,7 +100,7 @@ bool MainWindow::Create(int nCmdShow) {
         rect.right - rect.left,
         rect.bottom - rect.top,
         nullptr,
-        ::LoadMenuW(instance_, MAKEINTRESOURCEW(IDR_MAIN_MENU)),
+        ::LoadMenu(instance_, MAKEINTRESOURCE(IDR_MAIN_MENU)),
         instance_,
         this);
 
