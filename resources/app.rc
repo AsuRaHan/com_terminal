@@ -1,23 +1,18 @@
 #pragma code_page(65001)
 
-#include <windows.h>
-#include <commctrl.h>
+// #include <windows.h>
+// #include <commctrl.h>
 #include <winres.h>
 #include "resource.h"
 // Иконки
 IDI_APP_ICON ICON "app.ico"
-// #include "menus.rc"
 
-// Нейтральные / английские строки (без LANGUAGE)
-#include "strings_en.rc"
-// Меню
-#include "menu_en.rc"
+// английский
+#include "en.rc"
 
+// Русский
+#include "ru.rc"
 
-// Русские  строки
-#include "strings_ru.rc"
-// Русское меню
-#include "menu_ru.rc"
 
 // Акселераторы (горячие клавиши)
 IDR_MAIN_ACCEL ACCELERATORS

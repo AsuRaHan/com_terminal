@@ -1,4 +1,30 @@
+#pragma code_page(65001)
+#include "resource.h"
+#include <winres.h>
 LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+
+IDR_MAIN_MENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "Вы&ход\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Порт"
+    BEGIN
+        MENUITEM "&Открыть\tCtrl+O", IDM_PORT_OPEN
+        MENUITEM "&Закрыть\tCtrl+Q", IDM_PORT_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tCtrl+R", IDM_PORT_REFRESH
+    END
+    POPUP "&Правка"
+    BEGIN
+        MENUITEM "&Копировать\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Выбрать всё\tCtrl+A", IDM_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Очистить\tCtrl+L", IDC_BTN_CLEAR
+    END
+END
+
 STRINGTABLE
 BEGIN
     IDS_ERROR_DPI "Не удалось включить DPI awareness."
@@ -22,7 +48,7 @@ BEGIN
     IDS_RX_PREFIX "RX:"
     // Tooltips
     IDS_TIP_COMBO_PORT "Выберите COM порт. Нажмите Обновить, чтобы обновить список."
-    IDS_TIP_COMBO_BAUD "Скорость передачи (9600, 19200, 38400, 57600, 115200 и т.д.)"
+    IDS_TIP_COMBO_BAUD "Скорость передачи (9600, 19200, 38400, 57600, 115200 и т.д.) или введите в ручную"
     IDS_TIP_BUTTON_REFRESH "Сканировать доступные COM порты"
     IDS_TIP_BUTTON_OPEN "Открыть выбранный COM порт"
     IDS_TIP_BUTTON_CLOSE "Закрыть текущий COM порт"

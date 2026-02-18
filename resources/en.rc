@@ -1,3 +1,29 @@
+#pragma code_page(65001)
+#include "resource.h"
+#include <winres.h>
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDR_MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+       MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Port"
+    BEGIN
+       MENUITEM "&Open\tCtrl+O", IDM_PORT_OPEN
+       MENUITEM "&Close\tCtrl+Q", IDM_PORT_CLOSE
+       MENUITEM "&Refresh\tCtrl+R", IDM_PORT_REFRESH
+    END
+    POPUP "&Edit"
+    BEGIN
+       MENUITEM "&Copy\tCtrl+C", IDM_EDIT_COPY
+       MENUITEM "Select &All\tCtrl+A", IDM_EDIT_SELECTALL
+       MENUITEM SEPARATOR
+       MENUITEM "&Clear\tCtrl+L", IDC_BTN_CLEAR
+    END
+END
+
 STRINGTABLE
 BEGIN
     IDS_ERROR_DPI "Failed to enable DPI awareness."
@@ -18,7 +44,7 @@ BEGIN
     IDS_STATUS_READY "Ready"
     // Tooltips
     IDS_TIP_COMBO_PORT "Select COM port. Click Refresh to update list."
-    IDS_TIP_COMBO_BAUD "Baud rate (9600, 19200, 38400, 57600, 115200, etc)"
+    IDS_TIP_COMBO_BAUD "Baud rate (9600, 19200, 38400, 57600, 115200, etc) enter manually"
     IDS_TIP_BUTTON_REFRESH "Scan for available COM ports"
     IDS_TIP_BUTTON_OPEN "Open selected COM port"
     IDS_TIP_BUTTON_CLOSE "Close current COM port"

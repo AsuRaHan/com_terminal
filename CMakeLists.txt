@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.30)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(COMTerminal VERSION 1.0.0 LANGUAGES CXX RC)
 
@@ -43,7 +43,6 @@ add_executable(COMTerminal WIN32
 )
 
 target_include_directories(COMTerminal PRIVATE
-    include
     src
 )
 
