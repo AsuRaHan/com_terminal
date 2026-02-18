@@ -5,7 +5,6 @@
 #include <atomic>
 #include <functional>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "core/SafeHandle.h"
@@ -65,15 +64,18 @@ public:
 private:
     static DWORD WINAPI ReadThreadProc(LPVOID param);
     DWORD ReadThreadMain();
-
+    void ProcessCommEvent(DWORD evtMask, std::vector<uint8_t>& readBuffer);
+    void ReadAllAvailableData(std::vector<uint8_t>& readBuffer);
     core::SafeHandle port_;
-    core::SafeHandle readEvent_;
-    core::SafeHandle writeEvent_;
-    core::SafeHandle shutdownEvent_;
+    core::SafeHandle readEvent_;      // Для ReadFile overlapped
+    core::SafeHandle writeEvent_;     // Для WriteFile overlapped
+    core::SafeHandle waitEvent_;      // Для WaitCommEvent overlapped
+    core::SafeHandle shutdownEvent_;  // Для завершения потока
     core::SafeHandle threadHandle_;
 
     OVERLAPPED readOverlapped_;
     OVERLAPPED writeOverlapped_;
+    OVERLAPPED waitOverlapped_;
     std::atomic<bool> running_;
     DataCallback callback_;
 };

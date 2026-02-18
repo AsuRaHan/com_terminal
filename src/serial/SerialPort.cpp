@@ -91,6 +91,7 @@ SerialPort::~SerialPort() {
 bool SerialPort::Open(const std::wstring& portName, const PortSettings& settings) {
     Close();
 
+    // 1. Открываем порт с overlapped режимом
     std::wstring path = L"\\\\.\\" + portName;
     HANDLE rawPort = ::CreateFileW(
         path.c_str(),
@@ -98,45 +99,52 @@ bool SerialPort::Open(const std::wstring& portName, const PortSettings& settings
         0,
         nullptr,
         OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,  // Критично!
         nullptr);
 
     if (rawPort == INVALID_HANDLE_VALUE) {
         return false;
     }
-
     port_.Reset(rawPort);
 
+    // 2. Создаем все необходимые события
     HANDLE rawReadEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
-    if (rawReadEvent == nullptr) {
-        Close();
-        return false;
-    }
-
-    HANDLE rawShutdownEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
-    if (rawShutdownEvent == nullptr) {
-        Close();
-        return false;
-    }
     HANDLE rawWriteEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
-    if (rawWriteEvent == nullptr) {
+    HANDLE rawWaitEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    HANDLE rawShutdownEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
+
+    if (!rawReadEvent || !rawWriteEvent || !rawWaitEvent || !rawShutdownEvent) {
         Close();
         return false;
     }
 
     readEvent_.Reset(rawReadEvent);
     writeEvent_.Reset(rawWriteEvent);
+    waitEvent_.Reset(rawWaitEvent);
     shutdownEvent_.Reset(rawShutdownEvent);
+
+    // 3. Настраиваем OVERLAPPED структуры
     readOverlapped_ = OVERLAPPED{};
     writeOverlapped_ = OVERLAPPED{};
+    waitOverlapped_ = OVERLAPPED{};
+    
     readOverlapped_.hEvent = readEvent_.Get();
     writeOverlapped_.hEvent = writeEvent_.Get();
+    waitOverlapped_.hEvent = waitEvent_.Get();
 
+    // 4. Настраиваем порт (DCB, таймауты)
     if (!ConfigurePort(port_.Get(), settings)) {
         Close();
         return false;
     }
 
+    // 5. Устанавливаем маску событий - ждем только прихода данных
+    if (!::SetCommMask(port_.Get(), EV_RXCHAR)) {
+        Close();
+        return false;
+    }
+
+    // 6. Запускаем поток чтения
     running_.store(true);
     HANDLE rawThread = ::CreateThread(nullptr, 0, &SerialPort::ReadThreadProc, this, 0, nullptr);
     if (rawThread == nullptr) {
@@ -152,24 +160,34 @@ void SerialPort::Close() {
     const bool wasRunning = running_.exchange(false);
 
     if (wasRunning) {
+        // Прерываем все ожидающие операции
         if (port_.IsValid()) {
             ::CancelIoEx(port_.Get(), nullptr);
         }
+        
+        // Будим поток чтения
         if (shutdownEvent_.IsValid()) {
             ::SetEvent(shutdownEvent_.Get());
         }
+
+        // Ждем завершения потока (с таймаутом)
         if (threadHandle_.IsValid()) {
             ::WaitForSingleObject(threadHandle_.Get(), 3000);
         }
     }
 
+    // Освобождаем ресурсы
     threadHandle_.Reset();
     readEvent_.Reset();
     writeEvent_.Reset();
+    waitEvent_.Reset();
     shutdownEvent_.Reset();
     port_.Reset();
+    
+    // Сбрасываем overlapped структуры
     readOverlapped_ = OVERLAPPED{};
     writeOverlapped_ = OVERLAPPED{};
+    waitOverlapped_ = OVERLAPPED{};
 }
 
 bool SerialPort::IsOpen() const noexcept {
@@ -233,44 +251,193 @@ DWORD WINAPI SerialPort::ReadThreadProc(LPVOID param) {
     return self->ReadThreadMain();
 }
 
+// DWORD SerialPort::ReadThreadMain() {
+//     std::array<uint8_t, 1024> readBuffer{};
+//     HANDLE waits[2] = {readEvent_.Get(), shutdownEvent_.Get()};
+
+//     while (running_.load()) {
+//         DWORD readBytes = 0;
+//         ::ResetEvent(readEvent_.Get());
+
+//         const BOOL ok = ::ReadFile(
+//             port_.Get(),
+//             readBuffer.data(),
+//             static_cast<DWORD>(readBuffer.size()),
+//             &readBytes,
+//             &readOverlapped_);
+
+//         if (!ok) {
+//             const DWORD error = ::GetLastError();
+//             if (error != ERROR_IO_PENDING) {
+//                 break;
+//             }
+
+//             const DWORD wait = ::WaitForMultipleObjects(2, waits, FALSE, INFINITE);
+//             if (wait == WAIT_OBJECT_0 + 1U) {
+//                 break;
+//             }
+
+//             if (!::GetOverlappedResult(port_.Get(), &readOverlapped_, &readBytes, FALSE)) {
+//                 break;
+//             }
+//         }
+
+//         if (readBytes > 0 && callback_) {
+//             std::vector<uint8_t> packet(readBuffer.begin(), readBuffer.begin() + readBytes);
+//             callback_(packet);
+//         }
+//     }
+
+//     return 0;
+// }
+
+
+
+void SerialPort::ProcessCommEvent(DWORD evtMask, std::vector<uint8_t>& readBuffer) {
+    // Проверяем разные типы событий
+    if (evtMask & EV_RXCHAR) {
+        // Пришли данные
+        ReadAllAvailableData(readBuffer);
+    }
+    
+    if (evtMask & EV_CTS) {
+        // Изменился CTS
+        DWORD modemStatus = 0;
+        GetModemStatus(&modemStatus);
+        // Можно оповестить о смене CTS если нужно
+    }
+    
+    if (evtMask & EV_DSR) {
+        // Изменился DSR
+        DWORD modemStatus = 0;
+        GetModemStatus(&modemStatus);
+        // Можно оповестить о смене DSR
+    }
+    
+    // Обработка ошибок
+    if (evtMask & EV_ERR) {
+        DWORD errors = 0;
+        COMSTAT status = {0};
+        ::ClearCommError(port_.Get(), &errors, &status);
+        // Логируем ошибку если нужно
+    }
+}
+
+void SerialPort::ReadAllAvailableData(std::vector<uint8_t>& readBuffer) {
+    DWORD errors = 0;
+    COMSTAT status = {0};
+    
+    if (!::ClearCommError(port_.Get(), &errors, &status)) {
+        return;
+    }
+    
+    if (status.cbInQue == 0) {
+        return;
+    }
+    
+    // Увеличиваем буфер если нужно
+    if (readBuffer.size() < status.cbInQue) {
+        readBuffer.resize(status.cbInQue);
+    }
+    
+    DWORD bytesRead = 0;
+    ::ResetEvent(readEvent_.Get());
+    readOverlapped_ = OVERLAPPED{};
+    readOverlapped_.hEvent = readEvent_.Get();
+    
+    BOOL readOk = ::ReadFile(
+        port_.Get(),
+        readBuffer.data(),
+        status.cbInQue,
+        &bytesRead,
+        &readOverlapped_);
+    
+    if (!readOk) {
+        DWORD readError = ::GetLastError();
+        if (readError == ERROR_IO_PENDING) {
+            // Ждем завершения чтения (но недолго)
+            HANDLE readHandles[2] = { readEvent_.Get(), shutdownEvent_.Get() };
+            DWORD readWait = ::WaitForMultipleObjects(2, readHandles, FALSE, 100);
+            
+            if (readWait == WAIT_OBJECT_0) {
+                ::GetOverlappedResult(port_.Get(), &readOverlapped_, &bytesRead, FALSE);
+            }
+        }
+    }
+    
+    if (bytesRead > 0 && callback_) {
+        std::vector<uint8_t> packet(
+            readBuffer.begin(),
+            readBuffer.begin() + bytesRead
+        );
+        callback_(packet);
+    }
+}
+
 DWORD SerialPort::ReadThreadMain() {
-    std::array<uint8_t, 1024> readBuffer{};
-    HANDLE waits[2] = {readEvent_.Get(), shutdownEvent_.Get()};
+    std::vector<uint8_t> readBuffer(8192); // Увеличил буфер
+    HANDLE waitHandles[2] = { shutdownEvent_.Get(), waitEvent_.Get() };
+    DWORD evtMask = 0;
+    bool waitPending = false;
 
     while (running_.load()) {
-        DWORD readBytes = 0;
-        ::ResetEvent(readEvent_.Get());
+        // Если нет ожидающей операции WaitCommEvent - запускаем новую
+        if (!waitPending) {
+            ::ResetEvent(waitEvent_.Get());
+            waitOverlapped_ = OVERLAPPED{}; // Важно: переинициализируем!
+            waitOverlapped_.hEvent = waitEvent_.Get();
 
-        const BOOL ok = ::ReadFile(
-            port_.Get(),
-            readBuffer.data(),
-            static_cast<DWORD>(readBuffer.size()),
-            &readBytes,
-            &readOverlapped_);
-
-        if (!ok) {
-            const DWORD error = ::GetLastError();
-            if (error != ERROR_IO_PENDING) {
-                break;
-            }
-
-            const DWORD wait = ::WaitForMultipleObjects(2, waits, FALSE, INFINITE);
-            if (wait == WAIT_OBJECT_0 + 1U) {
-                break;
-            }
-
-            if (!::GetOverlappedResult(port_.Get(), &readOverlapped_, &readBytes, FALSE)) {
-                break;
+            BOOL waitStatus = ::WaitCommEvent(port_.Get(), &evtMask, &waitOverlapped_);
+            
+            if (!waitStatus) {
+                DWORD error = ::GetLastError();
+                if (error == ERROR_IO_PENDING) {
+                    waitPending = true; // Операция в процессе
+                } else {
+                    // Реальная ошибка
+                    if (running_.load()) {
+                        // Небольшая задержка чтобы не спамить ошибками
+                        ::Sleep(10);
+                    }
+                    continue;
+                }
+            } else {
+                // Событие произошло синхронно (редкий случай)
+                waitPending = false;
+                // Обрабатываем событие сразу
+                ProcessCommEvent(evtMask, readBuffer);
             }
         }
 
-        if (readBytes > 0 && callback_) {
-            std::vector<uint8_t> packet(readBuffer.begin(), readBuffer.begin() + readBytes);
-            callback_(packet);
+        // Ждем либо завершения WaitCommEvent, либо сигнала закрытия
+        if (waitPending) {
+            DWORD waitResult = ::WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE);
+            
+            if (waitResult == WAIT_OBJECT_0) {
+                // Сигнал закрытия
+                break;
+            }
+            else if (waitResult == WAIT_OBJECT_0 + 1) {
+                // WaitCommEvent завершился
+                waitPending = false;
+                
+                DWORD bytesTransferred = 0;
+                if (::GetOverlappedResult(port_.Get(), &waitOverlapped_, &bytesTransferred, FALSE)) {
+                    ProcessCommEvent(evtMask, readBuffer);
+                } else {
+                    // Ошибка получения результата
+                    DWORD err = ::GetLastError();
+                    if (err != ERROR_OPERATION_ABORTED) {
+                        // Не критичная ошибка, продолжаем работу
+                    }
+                }
+            }
         }
     }
 
     return 0;
 }
+
+
 
 } // namespace serial
