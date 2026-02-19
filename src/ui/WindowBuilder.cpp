@@ -493,7 +493,21 @@ void WindowBuilder::CreateControls() {
         reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_CHK_SAVELOG)),
         owner_.instance_,
         nullptr);
-
+    // Добавляем чекбокс в Terminal Control группу
+    owner_.checkAutoScroll_ = ::CreateWindowEx(
+        0,
+        WC_BUTTONW,
+        L"Auto-scroll",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+        0, 0, 0, 0,
+        owner_.window_,
+        reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_CHK_AUTOSCROLL)),
+        owner_.instance_,
+        nullptr);
+    
+    // По умолчанию включено
+    ::SendMessage(owner_.checkAutoScroll_, BM_SETCHECK, BST_CHECKED, 0);
+    
     owner_.buttonClear_ = ::CreateWindowEx(
         0,
         WC_BUTTONW,

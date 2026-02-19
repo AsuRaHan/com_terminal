@@ -51,7 +51,7 @@ void WindowLayout::ResizeChildren() const {
     const int COMBO_RXMODE_WIDTH = 90;
     const int CHECK_SAVELOG_WIDTH = 80;
     const int BTN_CLEAR_WIDTH = 70;
-    
+    const int AUTO_SCROLL_WIDTH = 90;
     // === Размеры элементов Send Data ===
     const int BTN_SEND_WIDTH = 72;
     
@@ -207,6 +207,10 @@ void WindowLayout::ResizeChildren() const {
     x += CHECK_SAVELOG_WIDTH + GAP;
     
     ::MoveWindow(owner_.buttonClear_, x, y-2, BTN_CLEAR_WIDTH, ROW_HEIGHT, TRUE);
+    x += BTN_CLEAR_WIDTH + GAP;
+
+    ::MoveWindow(owner_.checkAutoScroll_, x, y+4, AUTO_SCROLL_WIDTH, ROW_HEIGHT-8, TRUE);
+    x += AUTO_SCROLL_WIDTH + GAP;
 
     // ============ ГРУППА 5: Send Data ============
     int sendTop = group4Rect.bottom + GAP;

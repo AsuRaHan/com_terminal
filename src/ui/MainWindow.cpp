@@ -69,6 +69,7 @@ MainWindow::MainWindow(HINSTANCE instance):
     txBytes_(0),
     rxBytes_(0),
     tooltip_(nullptr),
+    autoScrollEnabled_(true),
     builder_(std::make_unique<WindowBuilder>(*this)),
     layout_(std::make_unique<WindowLayout>(*this)),
     actions_(std::make_unique<WindowActions>(*this)) {
@@ -164,7 +165,7 @@ void MainWindow::AppendLog(LogKind kind, const std::wstring& text) {
         logVirtualizer_.Initialize(L"logs");
     }
     logVirtualizer_.AppendLine(line, color, saveToDisk);
-    AppendLineToRichEdit(line, color, true);
+    AppendLineToRichEdit(line, color, autoScrollEnabled_);
 
     if (!rebuildingRichEdit_ && logVirtualizer_.ShouldRewrite()) {
         RebuildRichEditFromVirtualBuffer();
@@ -432,6 +433,10 @@ LRESULT MainWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
+        case IDC_CHK_AUTOSCROLL:
+            // Обновляем флаг при клике на чекбокс
+            autoScrollEnabled_ = (::SendMessage(checkAutoScroll_, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        return 0;
         case IDM_FILE_EXIT:
             ::DestroyWindow(hwnd);
             return 0;

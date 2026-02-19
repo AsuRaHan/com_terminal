@@ -77,7 +77,7 @@ private:
     HWND checkDtr_;
     HWND comboRxMode_;
     HWND checkSaveLog_;
-
+    HWND checkAutoScroll_;    
     HWND groupPort_;
     HWND groupStats_;
     HWND groupTerminalCtrl_;
@@ -114,14 +114,8 @@ private:
     void SaveLogToFile(); // Opens Save File dialog and saves log content to a file
     HICON GetCachedIcon(int resId); // Loads and caches icons for menu items
 
-
     bool autoScrollEnabled_;      // флаг: включена ли авто-прокрутка
-    bool ignoreScrollEvents_;     // для подавления циклических сообщений
-    bool userScrolled_;           // пользователь покрутил вручную
 
-    // методв для автоскролла логера
-    bool IsAtBottom() const;
-    void UpdateAutoScrollState();
 };
 
 } // namespace ui
