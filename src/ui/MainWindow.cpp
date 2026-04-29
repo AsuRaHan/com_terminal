@@ -172,20 +172,21 @@ void MainWindow::AppendLog(LogKind kind, const std::wstring& text) {
     }
 }
 
-void MainWindow::AppendLineToRichEdit(const std::wstring& line, COLORREF color, bool scrollToCaret) {
-    const int end = ::GetWindowTextLengthW(richLog_);
+void MainWindow::AppendLineToRichEdit(const std::wstring& line, COLORREF color, bool /*scrollToCaret*/) {
+    // 1. Оставляем курсор в конце
+    const int end = ::GetWindowTextLength(richLog_);
     ::SendMessage(richLog_, EM_SETSEL, static_cast<WPARAM>(end), static_cast<LPARAM>(end));
 
+    // 2. Форматируем цвет
     CHARFORMAT2W format{};
     format.cbSize = sizeof(format);
     format.dwMask = CFM_COLOR;
     format.crTextColor = color;
     ::SendMessage(richLog_, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&format));
 
+    // 3. Вставляем строку
     ::SendMessage(richLog_, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(line.c_str()));
-    if (scrollToCaret) {
-        ::SendMessage(richLog_, EM_SCROLLCARET, 0, 0);
-    }
+
 }
 
 void MainWindow::RebuildRichEditFromVirtualBuffer() {

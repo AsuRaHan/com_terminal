@@ -24,6 +24,8 @@ private:
 
     bool ReadInternal(char* buffer, DWORD size, DWORD* readBytes, bool consume);
     [[nodiscard]] DWORD SizeLocked() const noexcept;
+    [[nodiscard]] bool TryAdvanceHead() noexcept;
+    [[nodiscard]] bool TryAdvanceTail() noexcept;
 
     CRITICAL_SECTION cs_;
     std::array<char, kCapacity> data_;

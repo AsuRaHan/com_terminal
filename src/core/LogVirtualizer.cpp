@@ -98,9 +98,13 @@ bool LogVirtualizer::AppendUtf8LineToDisk(const std::wstring& line) {
     }
 
     const std::string utf8 = ToUtf8(line);
-    file_.write(utf8.data(), static_cast<std::streamsize>(utf8.size()));
-    file_.flush();
-    return static_cast<bool>(file_);
+    if (!file_.write(utf8.data(), static_cast<std::streamsize>(utf8.size()))) {
+        return false;
+    }
+    if (!file_.flush()) {
+        return false;
+    }
+    return true;
 }
 
 std::string LogVirtualizer::ToUtf8(const std::wstring& text) {

@@ -80,16 +80,12 @@ void WindowBuilder::AddTooltip(HWND control, const std::wstring& text, const std
 
     TOOLINFOW ti{};
     ti.cbSize = sizeof(TOOLINFOW);
-    ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND;
+    ti.uFlags = TTF_SUBCLASS | TTF_IDISHWND | TTF_TRACK;
     ti.hwnd = owner_.window_;
     ti.uId = reinterpret_cast<UINT_PTR>(control);
+    ti.lpszText = const_cast<LPWSTR>(fullText.c_str());
     
-    // ВАЖНО: храним строку где-то, чтобы не умерла
-    static std::unordered_map<HWND, std::wstring> tooltipTexts;
-    tooltipTexts[control] = fullText;
-    ti.lpszText = const_cast<LPWSTR>(tooltipTexts[control].c_str());
-    
-    ::SendMessage(owner_.tooltip_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
+    ::SendMessage(owner_.tooltip_, TTM_ADDTOOLW, 0, reinterpret_cast<LPARAM>(&ti));
 }
 
 void WindowBuilder::AddAllTooltips() {

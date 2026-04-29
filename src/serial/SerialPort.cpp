@@ -384,7 +384,7 @@ DWORD SerialPort::ReadThreadMain() {
         // Если нет ожидающей операции WaitCommEvent - запускаем новую
         if (!waitPending) {
             ::ResetEvent(waitEvent_.Get());
-            waitOverlapped_ = OVERLAPPED{}; // Важно: переинициализируем!
+            // Важно: только устанавливаем hEvent, не перезаписываем всю структуру
             waitOverlapped_.hEvent = waitEvent_.Get();
 
             BOOL waitStatus = ::WaitCommEvent(port_.Get(), &evtMask, &waitOverlapped_);

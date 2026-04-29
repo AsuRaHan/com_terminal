@@ -20,12 +20,12 @@ bool BufferPool::Write(const char* buffer, DWORD size) {
     ::EnterCriticalSection(&cs_);
 
     for (DWORD i = 0; i < size; ++i) {
-        const DWORD next = (head_ + 1U) % kCapacity;
-        if (next == tail_) {
-            DiscardOldest();
+        if (!TryAdvanceHead()) {
+            ::LeaveCriticalSection(&cs_);
+            return false;
         }
         data_[head_] = buffer[i];
-        head_ = next;
+        head_ = (head_ + 1U) % kCapacity;
     }
 
     ::LeaveCriticalSection(&cs_);
@@ -61,6 +61,10 @@ bool BufferPool::ReadInternal(char* buffer, DWORD size, DWORD* readBytes, bool c
 
     for (DWORD i = 0; i < toRead; ++i) {
         buffer[i] = data_[tail];
+        if (!TryAdvanceTail()) {
+            ::LeaveCriticalSection(&cs_);
+            return false;
+        }
         tail = (tail + 1U) % kCapacity;
     }
 
@@ -79,6 +83,14 @@ DWORD BufferPool::SizeLocked() const noexcept {
         return head_ - tail_;
     }
     return kCapacity - (tail_ - head_);
+}
+
+bool BufferPool::TryAdvanceHead() noexcept {
+    return head_ != tail_;
+}
+
+bool BufferPool::TryAdvanceTail() noexcept {
+    return tail_ != head_;
 }
 
 } // namespace core

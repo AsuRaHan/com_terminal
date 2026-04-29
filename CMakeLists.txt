@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.16)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(COMTerminal VERSION 1.0.0 LANGUAGES CXX RC)
 
-if(NOT WIN32)
-    message(FATAL_ERROR "COMTerminal supports only Windows 10/11")
+# Проверка наличия компилятора Visual Studio
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    message(STATUS "Using Visual Studio compiler")
+elseif(NOT WIN32)
+    message(FATAL_ERROR "COMTerminal supports only Windows 10/11 with MSVC compiler")
 endif()
 
 # Проверка версии Windows
@@ -24,6 +27,7 @@ add_compile_definitions(
 
 # Используем статическую CRT для изоляции
 if(MSVC)
+    # Статическая CRT для изоляции (Debug: с _DEBUG, Release: без)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
@@ -43,8 +47,15 @@ add_executable(COMTerminal WIN32
 )
 
 target_include_directories(COMTerminal PRIVATE
-    src
+    ${CMAKE_SOURCE_DIR}/src
 )
+
+# Оптимизации для Release-сборки
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(MSVC)
+        message(STATUS "Release optimizations enabled")
+    endif()
+endif()
 
 # Устанавливаем стандарт C++20
 set(CMAKE_CXX_STANDARD 20)
